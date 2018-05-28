@@ -28,7 +28,7 @@
 #include "../config.hpp"
 #include "../sticker_changer.hpp"
 
-static auto erase_override_if_exists_by_index(const int definition_index) -> void
+static auto erase_override_if_exists_by_index(const uint64_t xuid, const int definition_index) -> void
 {
 	// We have info about the item not needed to be overridden
 	if(k_weapon_info.count(definition_index))
@@ -38,13 +38,25 @@ static auto erase_override_if_exists_by_index(const int definition_index) -> voi
 		const auto& original_item = k_weapon_info.at(definition_index);
 
 		// We are overriding its icon when not needed
-		if(original_item.icon && icon_override_map.count(original_item.icon))
-			icon_override_map.erase(icon_override_map.at(original_item.icon)); // Remove the leftover override
+		if (original_item.icon && icon_override_map.count(xuid))
+		{
+			std::unordered_map<std::string_view, std::string_view> & user_id_icon_override_map = icon_override_map.at(xuid);
+
+			int count = user_id_icon_override_map.count(original_item.icon);
+
+			if (count)
+			{
+				user_id_icon_override_map.erase(user_id_icon_override_map.at(original_item.icon)); // Remove the leftover override
+
+				if (count == 1)
+					icon_override_map.erase(xuid);
+			}
+		}
 	}
 }
 
 static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item, const item_setting* config,
-	const unsigned xuid_low) -> void
+	const uint64_t xuid, const unsigned xuid_low) -> void
 {
 	// Force fallback values to be used.
 	item->GetItemIDHigh() = -1;
@@ -94,12 +106,12 @@ static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item,
 			const auto& original_item = k_weapon_info.at(old_definition_index);
 
 			if(original_item.icon && replacement_item.icon)
-				icon_override_map[original_item.icon] = replacement_item.icon;
+				icon_override_map[xuid][original_item.icon] = replacement_item.icon;
 		}
 	}
 	else
 	{
-		erase_override_if_exists_by_index(definition_index);
+		erase_override_if_exists_by_index(xuid,definition_index);
 	}
 
 	apply_sticker_changer(item);
@@ -120,159 +132,165 @@ static auto get_wearable_create_fn() -> sdk::CreateClientClassFn
 
 static auto post_data_update_start() -> void
 {
-	const auto local_index = g_engine->GetLocalPlayer();
-	const auto local = static_cast<sdk::C_BasePlayer*>(g_entity_list->GetClientEntity(local_index));
-
-	if(!local)
-		return;
-
-	/*if(auto player_resource = *g_player_resource)
+	for (int i = 1; i < (1 + sdk::MAX_PLAYERS); ++i)
 	{
-		player_resource->GetCoins()[local_index] = 890;
-		player_resource->GetMusicKits()[local_index] = 3;
-		player_resource->GetRanks()[local_index] = 1;
-		player_resource->GetWins()[local_index] = 1337;
-	}*/
+		const auto be = static_cast<sdk::C_BaseEntity*>(g_entity_list->GetClientEntity(i));
 
-	sdk::player_info_t player_info;
+		if (!(nullptr != be && be->IsPlayer())) continue;
 
-	if(!g_engine->GetPlayerInfo(local_index, &player_info))
-		return;
+		const auto player = static_cast<sdk::C_BasePlayer*>(be);
 
-	// Handle glove config
-	{
-		const auto wearables = local->GetWearables();
+		if (!player)
+			continue;
 
-		const auto glove_config = g_config.get_by_definition_index(GLOVE_T_SIDE);
-
-		static auto glove_handle = sdk::CBaseHandle(0);
-
-		auto glove = reinterpret_cast<sdk::C_BaseAttributableItem*>(g_entity_list->GetClientEntityFromHandle(wearables[0]));
-
-		if(!glove) // There is no glove
+		/*if(auto player_resource = *g_player_resource)
 		{
-			// Try to get our last created glove
-			const auto our_glove = reinterpret_cast<sdk::C_BaseAttributableItem*>(g_entity_list->GetClientEntityFromHandle(glove_handle));
+			player_resource->GetCoins()[local_index] = 890;
+			player_resource->GetMusicKits()[local_index] = 3;
+			player_resource->GetRanks()[local_index] = 1;
+			player_resource->GetWins()[local_index] = 1337;
+		}*/
 
-			if(our_glove) // Our glove still exists
-			{
-				wearables[0] = glove_handle;
-				glove = our_glove;
-			}
-		}
+		sdk::player_info_t player_info;
 
-		if(local->GetLifeState() != sdk::LifeState::ALIVE)
+		if (!g_engine->GetPlayerInfo(i, &player_info))
+			continue;
+
+		// Handle glove config
 		{
-			// We are dead but we have a glove, destroy it
-			if(glove)
+			const auto wearables = player->GetWearables();
+
+			const auto glove_config = g_config.get_by_definition_index(player_info.userid, GLOVE_T_SIDE);
+
+			static auto glove_handle = sdk::CBaseHandle(0);
+
+			auto glove = reinterpret_cast<sdk::C_BaseAttributableItem*>(g_entity_list->GetClientEntityFromHandle(wearables[0]));
+
+			if (!glove) // There is no glove
 			{
-				glove->GetClientNetworkable()->SetDestroyedOnRecreateEntities();
-				glove->GetClientNetworkable()->Release();
-			}
+				// Try to get our last created glove
+				const auto our_glove = reinterpret_cast<sdk::C_BaseAttributableItem*>(g_entity_list->GetClientEntityFromHandle(glove_handle));
 
-			return;
-		}
-
-		if(glove_config && glove_config->definition_override_index)
-		{
-			// We don't have a glove, but we should
-			if(!glove)
-			{
-				static auto create_wearable_fn = get_wearable_create_fn();
-
-				const auto entry = g_entity_list->GetHighestEntityIndex() + 1;
-				const auto serial = rand() % 0x1000;
-
-				//glove = static_cast<C_BaseAttributableItem*>(create_wearable_fn(entry, serial));
-				create_wearable_fn(entry, serial);
-				glove = reinterpret_cast<sdk::C_BaseAttributableItem*>(g_entity_list->GetClientEntity(entry));
-				assert(glove);
-
-				// He he
+				if (our_glove) // Our glove still exists
 				{
-					static auto set_abs_origin_addr = platform::find_pattern("client.dll", "\x55\x8B\xEC\x83\xE4\xF8\x51\x53\x56\x57\x8B\xF1", "xxxxxxxxxxxx");
+					wearables[0] = glove_handle;
+					glove = our_glove;
+				}
+			}
 
-					const auto set_abs_origin_fn = reinterpret_cast<void(__thiscall*)(void*, const sdk::Vector&)>(set_abs_origin_addr);
-
-					static constexpr sdk::Vector new_pos = { 10000.f, 10000.f, 10000.f };
-
-					set_abs_origin_fn(glove, new_pos);
+			if (player->GetLifeState() != sdk::LifeState::ALIVE)
+			{
+				// We are dead but we have a glove, destroy it
+				if (glove)
+				{
+					glove->GetClientNetworkable()->SetDestroyedOnRecreateEntities();
+					glove->GetClientNetworkable()->Release();
 				}
 
-				wearables[0] = entry | serial << 16;
-
-				// Let's store it in case we somehow lose it.
-				glove_handle = wearables[0];
+				continue;
 			}
 
-			// Thanks, Beakers
-			glove->GetIndex() = -1;
+			if (glove_config && glove_config->definition_override_index)
+			{
+				// We don't have a glove, but we should
+				if (!glove)
+				{
+					static auto create_wearable_fn = get_wearable_create_fn();
 
-			apply_config_on_attributable_item(glove, glove_config, player_info.xuid_low);
+					const auto entry = g_entity_list->GetHighestEntityIndex() + 1;
+					const auto serial = rand() % 0x1000;
+
+					//glove = static_cast<C_BaseAttributableItem*>(create_wearable_fn(entry, serial));
+					create_wearable_fn(entry, serial);
+					glove = reinterpret_cast<sdk::C_BaseAttributableItem*>(g_entity_list->GetClientEntity(entry));
+					assert(glove);
+
+					// He he
+					{
+						static auto set_abs_origin_addr = platform::find_pattern("client.dll", "\x55\x8B\xEC\x83\xE4\xF8\x51\x53\x56\x57\x8B\xF1", "xxxxxxxxxxxx");
+
+						const auto set_abs_origin_fn = reinterpret_cast<void(__thiscall*)(void*, const sdk::Vector&)>(set_abs_origin_addr);
+
+						static constexpr sdk::Vector new_pos = { 10000.f, 10000.f, 10000.f };
+
+						set_abs_origin_fn(glove, new_pos);
+					}
+
+					wearables[0] = entry | serial << 16;
+
+					// Let's store it in case we somehow lose it.
+					glove_handle = wearables[0];
+				}
+
+				// Thanks, Beakers
+				glove->GetIndex() = -1;
+
+				apply_config_on_attributable_item(glove, glove_config, player_info.xuid, player_info.xuid_low);
+			}
 		}
-	}
 
-	// Handle weapon configs
-	{
-		auto& weapons = local->GetWeapons();
-
-		for(auto weapon_handle : weapons)
+		// Handle weapon configs
 		{
-			if(weapon_handle == sdk::INVALID_EHANDLE_INDEX)
-				break;
+			auto& weapons = player->GetWeapons();
 
-			auto weapon = static_cast<sdk::C_BaseAttributableItem*>(g_entity_list->GetClientEntityFromHandle(weapon_handle));
+			for (auto weapon_handle : weapons)
+			{
+				if (weapon_handle == sdk::INVALID_EHANDLE_INDEX)
+					break;
 
-			if(!weapon)
+				auto weapon = static_cast<sdk::C_BaseAttributableItem*>(g_entity_list->GetClientEntityFromHandle(weapon_handle));
+
+				if (!weapon)
+					continue;
+
+				auto& definition_index = weapon->GetItemDefinitionIndex();
+
+				// All knives are terrorist knives.
+				if (const auto active_conf = g_config.get_by_definition_index(player_info.userid, is_knife(definition_index) ? WEAPON_KNIFE : definition_index))
+					apply_config_on_attributable_item(weapon, active_conf, player_info.userid, player_info.xuid_low);
+				else
+					erase_override_if_exists_by_index(player_info.userid, definition_index);
+			}
+		}
+
+		const auto view_model_handle = player->GetViewModel();
+
+		if (view_model_handle == sdk::INVALID_EHANDLE_INDEX)
+			continue;
+
+		const auto view_model = static_cast<sdk::C_BaseViewModel*>(g_entity_list->GetClientEntityFromHandle(view_model_handle));
+
+		if (!view_model)
+			continue;
+
+		const auto view_model_weapon_handle = view_model->GetWeapon();
+
+		if (view_model_weapon_handle == sdk::INVALID_EHANDLE_INDEX)
+			continue;
+
+		const auto view_model_weapon = static_cast<sdk::C_BaseAttributableItem*>(g_entity_list->GetClientEntityFromHandle(view_model_weapon_handle));
+
+		if (!view_model_weapon)
+			continue;
+
+		if (k_weapon_info.count(view_model_weapon->GetItemDefinitionIndex()))
+		{
+			const auto override_model = k_weapon_info.at(view_model_weapon->GetItemDefinitionIndex()).model;
+			auto override_model_index = g_model_info->GetModelIndex(override_model);
+			view_model->GetModelIndex() = override_model_index;
+
+			auto world_model_handle = view_model_weapon->GetWeaponWorldModel();
+
+			if (world_model_handle == sdk::INVALID_EHANDLE_INDEX)
 				continue;
 
-			auto& definition_index = weapon->GetItemDefinitionIndex();
+			const auto world_model = static_cast<sdk::CBaseWeaponWorldModel*>(g_entity_list->GetClientEntityFromHandle(world_model_handle));
 
-			// All knives are terrorist knives.
-			if(const auto active_conf = g_config.get_by_definition_index(is_knife(definition_index) ? WEAPON_KNIFE : definition_index))
-				apply_config_on_attributable_item(weapon, active_conf, player_info.xuid_low);
-			else
-				erase_override_if_exists_by_index(definition_index);
+			if (!world_model)
+				continue;
+
+			world_model->GetModelIndex() = override_model_index + 1;
 		}
-	}
-
-	const auto view_model_handle = local->GetViewModel();
-
-	if(view_model_handle == sdk::INVALID_EHANDLE_INDEX)
-		return;
-
-	const auto view_model = static_cast<sdk::C_BaseViewModel*>(g_entity_list->GetClientEntityFromHandle(view_model_handle));
-
-	if(!view_model)
-		return;
-
-	const auto view_model_weapon_handle = view_model->GetWeapon();
-
-	if(view_model_weapon_handle == sdk::INVALID_EHANDLE_INDEX)
-		return;
-
-	const auto view_model_weapon = static_cast<sdk::C_BaseAttributableItem*>(g_entity_list->GetClientEntityFromHandle(view_model_weapon_handle));
-
-	if(!view_model_weapon)
-		return;
-
-	if (k_weapon_info.count(view_model_weapon->GetItemDefinitionIndex()))
-	{
-		const auto override_model = k_weapon_info.at(view_model_weapon->GetItemDefinitionIndex()).model;
-		auto override_model_index = g_model_info->GetModelIndex(override_model);
-		view_model->GetModelIndex() = override_model_index;
-
-		auto world_model_handle = view_model_weapon->GetWeaponWorldModel();
-
-		if (world_model_handle == sdk::INVALID_EHANDLE_INDEX)
-			return;
-
-		const auto world_model = static_cast<sdk::CBaseWeaponWorldModel*>(g_entity_list->GetClientEntityFromHandle(world_model_handle));
-
-		if(!world_model)
-			return;
-
-		world_model->GetModelIndex() = override_model_index + 1;
 	}
 }
 

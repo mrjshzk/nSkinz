@@ -46,7 +46,7 @@ namespace ImGui
 
 void draw_gui()
 {
-	ImGui::SetNextWindowSize(ImVec2(700, 400));
+	ImGui::SetNextWindowSize(ImVec2(700, 430));
 	if(ImGui::Begin("nSkinz", nullptr,
 		ImGuiWindowFlags_NoResize |
 		ImGuiWindowFlags_NoCollapse |
@@ -106,6 +106,17 @@ void draw_gui()
 
 			// Enabled
 			ImGui::Checkbox("Enabled", &selected_entry.enabled);
+
+			// User ID
+			char tmp[33];
+			uint64_t xuid;
+			xuid = (uint64_t)((uint32_t)selected_entry.xuid_lo) << 32 | (uint64_t)(uint32_t)selected_entry.xuid_hi;
+			strcpy(tmp, std::to_string(xuid).c_str());
+			ImGui::InputText("XUID", tmp, 33);
+			xuid = strtoull(tmp, nullptr, 10);
+			
+			selected_entry.xuid_lo = (int)(uint32_t)(xuid >> 32);
+			selected_entry.xuid_hi = (int)(uint32_t)(xuid >> 0);
 
 			// Pattern Seed
 			ImGui::InputInt("Seed", &selected_entry.seed);

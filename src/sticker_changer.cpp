@@ -36,6 +36,30 @@ enum class EStickerAttributeType
 
 static auto s_econ_item_interface_wrapper_offset = std::uint16_t(0);
 
+int GetUserIdFromItem(sdk::C_BaseAttributableItem * item)
+{
+	auto handle = item->GetOwnerEntity();
+
+	while (auto parent = g_entity_list->GetClientEntityFromHandle(handle))
+	{
+		if (const auto be = parent->GetBaseEntity())
+		{
+			if (be->IsPlayer())
+			{
+
+				sdk::player_info_t player_info;
+
+				if (g_engine->GetPlayerInfo(be->GetIndex(), &player_info))
+				{
+					return player_info.userid;
+				}
+			}
+		}
+	}
+
+	return -1;
+}
+
 struct GetStickerAttributeBySlotIndexFloat
 {
 	static auto __fastcall hooked(void* thisptr, void*, const int slot,
@@ -45,7 +69,7 @@ struct GetStickerAttributeBySlotIndexFloat
 
 		const auto defindex = item->GetItemDefinitionIndex();
 
-		auto config = g_config.get_by_definition_index(defindex);
+		auto config = g_config.get_by_definition_index(GetUserIdFromItem(item), defindex);
 
 		if(config)
 		{
@@ -81,7 +105,7 @@ struct GetStickerAttributeBySlotIndexInt
 		{
 			const auto defindex = item->GetItemDefinitionIndex();
 
-			auto config = g_config.get_by_definition_index(defindex);
+			auto config = g_config.get_by_definition_index(GetUserIdFromItem(item), defindex);
 
 			if(config)
 				return config->stickers.at(slot).kit_index;

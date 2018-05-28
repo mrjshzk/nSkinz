@@ -10,11 +10,17 @@ namespace sdk
 	public:
 		NETVAR_OFFSET(GetIndex, "CBaseEntity", "m_bIsAutoaimTarget", +0x4, int);
 		NETVAR(GetModelIndex, "CBaseEntity", "m_nModelIndex", unsigned);
+		NETVAR(GetOwnerEntity, "CBaseEntity", "m_hOwnerEntity", CBaseHandle);
 
 		void SetModelIndex(const int index)
 		{
 			get_vfunc<void(__thiscall*)(C_BaseEntity*, int)>(this, 75)(this, index);
 		}
+
+		bool IsPlayer(void) /* const */
+		{
+			return get_vfunc<bool(__thiscall *)(C_BaseEntity*)>(this, 152)(this);
+		};
 	};
 
 	class C_BaseCombatCharacter : public C_BaseEntity

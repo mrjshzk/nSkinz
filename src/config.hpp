@@ -116,6 +116,8 @@ struct item_setting
 
 	char name[32] = "Default";
 	bool enabled = false;
+	int xuid_lo = 0;
+	int xuid_hi = 0;
 	int definition_vector_index = 0;
 	int definition_index = 1;
 	int entity_quality_vector_index = 0;
@@ -146,26 +148,37 @@ public:
 	auto save() -> void;
 	auto load() -> void;
 
-	auto get_by_definition_index(int definition_index) -> item_setting*;
+	auto get_by_definition_index(int user_id, int definition_index) -> item_setting*;
 
 	auto get_items() -> std::vector<item_setting>&
 	{
 		return m_items;
 	}
 
-	auto get_icon_override_map() -> std::unordered_map<std::string_view, std::string_view>&
+	auto get_icon_override_map() -> std::unordered_map<uint64_t, std::unordered_map<std::string_view, std::string_view>>&
 	{
 		return m_icon_overrides;
 	}
 
-	auto get_icon_override(const std::string_view original) const -> const char*
+	auto get_icon_override(const int user_id, const std::string_view original) const -> const char*
 	{
-		return m_icon_overrides.count(original) ? m_icon_overrides.at(original).data() : nullptr;
+		uint64_t xuid = UserIdToXUID(user_id);
+
+		if (m_icon_overrides.count(xuid))
+		{
+			const std::unordered_map<std::string_view, std::string_view> & sub = m_icon_overrides.at(xuid);
+
+			return sub.count(original) ? sub.at(original).data() : nullptr;
+		}
+
+		return nullptr;
 	}
+
+	uint64_t UserIdToXUID(const int user_id) const;
 
 private:
 	std::vector<item_setting> m_items;
-	std::unordered_map<std::string_view, std::string_view> m_icon_overrides;
+	std::unordered_map<uint64_t,std::unordered_map<std::string_view, std::string_view>> m_icon_overrides;
 };
 
 extern config g_config;

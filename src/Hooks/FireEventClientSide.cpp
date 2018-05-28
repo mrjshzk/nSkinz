@@ -29,9 +29,8 @@
 auto __fastcall hooks::FireEventClientSide::hooked(sdk::IGameEventManager2* thisptr, void*, sdk::IGameEvent* event) -> bool
 {
 	// Filter to only the events we're interested in.
-	if(!strcmp(event->GetName(), "player_death")
-		&& g_engine->GetPlayerForUserID(event->GetInt("attacker")) == g_engine->GetLocalPlayer())
-		if(const auto icon_override = g_config.get_icon_override(event->GetString("weapon")))
+	if(!strcmp(event->GetName(), "player_death"))
+		if(const auto icon_override = g_config.get_icon_override(event->GetInt("attacker"), event->GetString("weapon")))
 			event->SetString("weapon", icon_override);
 
 	return m_original(thisptr, nullptr, event);

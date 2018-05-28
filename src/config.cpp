@@ -58,6 +58,8 @@ auto to_json(json& j, const item_setting& item) -> void
 	{
 		{"name", item.name},
 		{"enabled", item.enabled},
+		{"xuid_lo", item.xuid_lo},
+		{"xuid_hi", item.xuid_hi},
 		{"definition_index", item.definition_index},
 		{"entity_quality_index", item.entity_quality_index},
 		{"paint_kit_index", item.paint_kit_index},
@@ -74,6 +76,8 @@ auto from_json(const json& j, item_setting& item) -> void
 {
 	strcpy_s(item.name, j.at("name").get<std::string>().c_str());
 	item.enabled = j.at("enabled").get<bool>();
+	item.xuid_lo = j.at("xuid_lo").get<int>();
+	item.xuid_hi = j.at("xuid_hi").get<int>();
 	item.definition_index = j.at("definition_index").get<int>();
 	item.entity_quality_index = j.at("entity_quality_index").get<int>();
 	item.paint_kit_index = j.at("paint_kit_index").get<int>();
@@ -112,11 +116,45 @@ auto config::load() -> void
 	}
 }
 
-auto config::get_by_definition_index(const int definition_index) -> item_setting*
+auto config::get_by_definition_index(const int user_id, const int definition_index) -> item_setting*
 {
+	uint64_t xuid = UserIdToXUID(user_id);
+
+	int xuid_lo = 0;
+	int xuid_hi = 0;
+
+	xuid_lo = (int)(uint32_t)(xuid >> 32);
+	xuid_hi = (int)(uint32_t)(xuid >> 0);
+
 	for(auto& x : m_items)
-		if(x.enabled && x.definition_index == definition_index)
+		if(x.enabled && x.xuid_lo == xuid_lo && x.xuid_hi == xuid_hi && x.definition_index == definition_index)
 			return &x;
 
 	return nullptr;
+}
+
+uint64_t config::UserIdToXUID(const int user_id) const
+{
+	for (int i = 1; i < (1 + sdk::MAX_PLAYERS); ++i)
+	{
+		const auto be = static_cast<sdk::C_BaseEntity*>(g_entity_list->GetClientEntity(i));
+
+		if (!(nullptr != be && be->IsPlayer())) continue;
+
+		const auto player = static_cast<sdk::C_BasePlayer*>(be);
+
+		if (!player)
+			continue;
+
+		sdk::player_info_t player_info;
+
+		if (!g_engine->GetPlayerInfo(i, &player_info))
+			continue;
+
+		if (user_id == player_info.userid)
+		{
+			return player_info.xuid;
+		}
+	}
+	return 0;
 }
