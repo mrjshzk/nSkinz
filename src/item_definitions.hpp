@@ -42,6 +42,7 @@ enum ItemDefinitionIndex : int
 	WEAPON_M4A1 = 16,
 	WEAPON_MAC10 = 17,
 	WEAPON_P90 = 19,
+	WEAPON_MP5_SD = 23,
 	WEAPON_UMP45 = 24,
 	WEAPON_XM1014 = 25,
 	WEAPON_BIZON = 26,
@@ -81,6 +82,10 @@ enum ItemDefinitionIndex : int
 	WEAPON_KNIFE_SURVIVAL_BOWIE = 514,
 	WEAPON_KNIFE_BUTTERFLY = 515,
 	WEAPON_KNIFE_PUSH = 516,
+	WEAPON_KNIFE_URSUS = 519,
+	WEAPON_KNIFE_GYPSY_JACKKNIFE = 520,
+	WEAPON_KNIFE_STILETTO = 522,
+	WEAPON_KNIFE_WIDOWMAKER = 523,
 	GLOVE_STUDDED_BLOODHOUND = 5027,
 	GLOVE_T_SIDE = 5028,
 	GLOVE_CT_SIDE = 5029,
@@ -97,43 +102,46 @@ static auto is_knife(const int i) -> bool
 	return (i >= WEAPON_KNIFE_BAYONET && i < GLOVE_STUDDED_BLOODHOUND) || i == WEAPON_KNIFE_T || i == WEAPON_KNIFE;
 }
 
-// Stupid MSVC requires separate constexpr constructors for any initialization
-
-struct weapon_info
+//extern const std::map<size_t, weapon_info> k_weapon_info;
+namespace game_data
 {
-	constexpr weapon_info(const char* model, const char* icon = nullptr) :
-		model(model),
-		icon(icon)
-	{}
+	// Stupid MSVC requires separate constexpr constructors for any initialization
+	struct weapon_info
+	{
+		constexpr weapon_info(const char* model, const char* icon = nullptr) :
+			model(model),
+			icon(icon)
+		{}
 
-	const char* model;
-	const char* icon;
-};
+		const char* model;
+		const char* icon;
+	};
 
-struct weapon_name
-{
-	constexpr weapon_name(const int definition_index, const char* name) :
-		definition_index(definition_index),
-		name(name)
-	{}
+	struct weapon_name
+	{
+		constexpr weapon_name(const int definition_index, const char* name) :
+			definition_index(definition_index),
+			name(name)
+		{}
 
-	int definition_index = 0;
-	const char* name = nullptr;
-};
+		int definition_index = 0;
+		const char* name = nullptr;
+	};
 
-struct quality_name
-{
-	constexpr quality_name(const int index, const char* name) :
-		index(index),
-		name(name)
-	{}
+	struct quality_name
+	{
+		constexpr quality_name(const int index, const char* name) :
+			index(index),
+			name(name)
+		{}
 
-	int index = 0;
-	const char* name = nullptr;
-};
+		int index = 0;
+		const char* name = nullptr;
+	};
 
-extern const std::map<size_t, weapon_info> k_weapon_info;
-extern const std::vector<weapon_name> k_knife_names;
-extern const std::vector<weapon_name> k_glove_names;
-extern const std::vector<weapon_name> k_weapon_names;
-extern const std::vector<quality_name> k_quality_names;
+	const weapon_info* get_weapon_info(int defindex);
+	extern const std::vector<weapon_name> knife_names;
+	extern const std::vector<weapon_name> glove_names;
+	extern const std::vector<weapon_name> weapon_names;
+	extern const std::vector<quality_name> quality_names;
+}

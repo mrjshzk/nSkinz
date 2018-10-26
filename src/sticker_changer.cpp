@@ -108,7 +108,7 @@ struct GetStickerAttributeBySlotIndexInt
 			auto config = g_config.get_by_definition_index(GetUserIdFromItem(item), defindex);
 
 			if(config)
-				return config->stickers.at(slot).kit_index;
+				return config->stickers.at(slot).kit;
 		}
 
 		return m_original(thisptr, nullptr, slot, attribute, unknown);

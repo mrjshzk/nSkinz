@@ -26,32 +26,42 @@
 // These are std::vectors because else I'd have to write their size in the header or write my own container
 
 // We need these for overriding viewmodels and icons
-const std::map<size_t, weapon_info> k_weapon_info =
+const game_data::weapon_info* game_data::get_weapon_info(int defindex)
 {
-	{WEAPON_KNIFE,{"models/weapons/v_knife_default_ct.mdl", "knife_default_ct"}},
-	{WEAPON_KNIFE_T,{"models/weapons/v_knife_default_t.mdl", "knife_t"}},
-	{WEAPON_KNIFE_BAYONET, {"models/weapons/v_knife_bayonet.mdl", "bayonet"}},
-	{WEAPON_KNIFE_FLIP, {"models/weapons/v_knife_flip.mdl", "knife_flip"}},
-	{WEAPON_KNIFE_GUT, {"models/weapons/v_knife_gut.mdl", "knife_gut"}},
-	{WEAPON_KNIFE_KARAMBIT, {"models/weapons/v_knife_karam.mdl", "knife_karambit"}},
-	{WEAPON_KNIFE_M9_BAYONET, {"models/weapons/v_knife_m9_bay.mdl", "knife_m9_bayonet"}},
-	{WEAPON_KNIFE_TACTICAL, {"models/weapons/v_knife_tactical.mdl", "knife_tactical"}},
-	{WEAPON_KNIFE_FALCHION, {"models/weapons/v_knife_falchion_advanced.mdl", "knife_falchion"}},
-	{WEAPON_KNIFE_SURVIVAL_BOWIE, {"models/weapons/v_knife_survival_bowie.mdl", "knife_survival_bowie"}},
-	{WEAPON_KNIFE_BUTTERFLY, {"models/weapons/v_knife_butterfly.mdl", "knife_butterfly"}},
-	{WEAPON_KNIFE_PUSH, {"models/weapons/v_knife_push.mdl", "knife_push"}},
-	{GLOVE_STUDDED_BLOODHOUND,{"models/weapons/v_models/arms/glove_bloodhound/v_glove_bloodhound.mdl"}},
-	{GLOVE_T_SIDE,{"models/weapons/v_models/arms/glove_fingerless/v_glove_fingerless.mdl"}},
-	{GLOVE_CT_SIDE,{"models/weapons/v_models/arms/glove_hardknuckle/v_glove_hardknuckle.mdl"}},
-	{GLOVE_SPORTY,{"models/weapons/v_models/arms/glove_sporty/v_glove_sporty.mdl"}},
-	{GLOVE_SLICK,{"models/weapons/v_models/arms/glove_slick/v_glove_slick.mdl"}},
-	{GLOVE_LEATHER_WRAP,{"models/weapons/v_models/arms/glove_handwrap_leathery/v_glove_handwrap_leathery.mdl"}},
-	{GLOVE_MOTORCYCLE,{"models/weapons/v_models/arms/glove_motorcycle/v_glove_motorcycle.mdl"}},
-	{GLOVE_SPECIALIST,{"models/weapons/v_models/arms/glove_specialist/v_glove_specialist.mdl"}},
-	{GLOVE_HYDRA,{"models/weapons/v_models/arms/glove_bloodhound/v_glove_bloodhound_hydra.mdl"}}
-};
+	const static std::map<int, weapon_info> info =
+	{
+		{WEAPON_KNIFE,{"models/weapons/v_knife_default_ct.mdl", "knife_default_ct"}},
+		{WEAPON_KNIFE_T,{"models/weapons/v_knife_default_t.mdl", "knife_t"}},
+		{WEAPON_KNIFE_BAYONET, {"models/weapons/v_knife_bayonet.mdl", "bayonet"}},
+		{WEAPON_KNIFE_FLIP, {"models/weapons/v_knife_flip.mdl", "knife_flip"}},
+		{WEAPON_KNIFE_GUT, {"models/weapons/v_knife_gut.mdl", "knife_gut"}},
+		{WEAPON_KNIFE_KARAMBIT, {"models/weapons/v_knife_karam.mdl", "knife_karambit"}},
+		{WEAPON_KNIFE_M9_BAYONET, {"models/weapons/v_knife_m9_bay.mdl", "knife_m9_bayonet"}},
+		{WEAPON_KNIFE_TACTICAL, {"models/weapons/v_knife_tactical.mdl", "knife_tactical"}},
+		{WEAPON_KNIFE_FALCHION, {"models/weapons/v_knife_falchion_advanced.mdl", "knife_falchion"}},
+		{WEAPON_KNIFE_SURVIVAL_BOWIE, {"models/weapons/v_knife_survival_bowie.mdl", "knife_survival_bowie"}},
+		{WEAPON_KNIFE_BUTTERFLY, {"models/weapons/v_knife_butterfly.mdl", "knife_butterfly"}},
+		{WEAPON_KNIFE_PUSH, {"models/weapons/v_knife_push.mdl", "knife_push"}},
+		{WEAPON_KNIFE_URSUS,{"models/weapons/v_knife_ursus.mdl", "knife_ursus"}},
+		{WEAPON_KNIFE_GYPSY_JACKKNIFE,{"models/weapons/v_knife_gypsy_jackknife.mdl", "knife_gypsy_jackknife"}},
+		{WEAPON_KNIFE_STILETTO,{"models/weapons/v_knife_stiletto.mdl", "knife_stiletto"}},
+		{WEAPON_KNIFE_WIDOWMAKER,{"models/weapons/v_knife_widowmaker.mdl", "knife_widowmaker"}},
+		{GLOVE_STUDDED_BLOODHOUND,{"models/weapons/v_models/arms/glove_bloodhound/v_glove_bloodhound.mdl"}},
+		{GLOVE_T_SIDE,{"models/weapons/v_models/arms/glove_fingerless/v_glove_fingerless.mdl"}},
+		{GLOVE_CT_SIDE,{"models/weapons/v_models/arms/glove_hardknuckle/v_glove_hardknuckle.mdl"}},
+		{GLOVE_SPORTY,{"models/weapons/v_models/arms/glove_sporty/v_glove_sporty.mdl"}},
+		{GLOVE_SLICK,{"models/weapons/v_models/arms/glove_slick/v_glove_slick.mdl"}},
+		{GLOVE_LEATHER_WRAP,{"models/weapons/v_models/arms/glove_handwrap_leathery/v_glove_handwrap_leathery.mdl"}},
+		{GLOVE_MOTORCYCLE,{"models/weapons/v_models/arms/glove_motorcycle/v_glove_motorcycle.mdl"}},
+		{GLOVE_SPECIALIST,{"models/weapons/v_models/arms/glove_specialist/v_glove_specialist.mdl"}},
+		{GLOVE_HYDRA,{"models/weapons/v_models/arms/glove_bloodhound/v_glove_bloodhound_hydra.mdl"}}
+	};
 
-const std::vector<weapon_name> k_knife_names =
+	const auto entry = info.find(defindex);
+	return entry == end(info) ? nullptr : &entry->second;
+}
+
+const std::vector<game_data::weapon_name> game_data::knife_names =
 {
 	{0, "Default"},
 	{WEAPON_KNIFE_BAYONET, "Bayonet"},
@@ -63,10 +73,14 @@ const std::vector<weapon_name> k_knife_names =
 	{WEAPON_KNIFE_FALCHION, "Falchion Knife"},
 	{WEAPON_KNIFE_SURVIVAL_BOWIE, "Bowie Knife"},
 	{WEAPON_KNIFE_BUTTERFLY, "Butterfly Knife"},
-	{WEAPON_KNIFE_PUSH, "Shadow Daggers"}
+	{WEAPON_KNIFE_PUSH, "Shadow Daggers"},
+	{WEAPON_KNIFE_URSUS, "Ursus Knife"},
+	{WEAPON_KNIFE_GYPSY_JACKKNIFE, "Navaja Knife"},
+	{WEAPON_KNIFE_STILETTO, "Stiletto Knife"},
+	{WEAPON_KNIFE_WIDOWMAKER, "Talon Knife"}
 };
 
-const std::vector<weapon_name> k_glove_names =
+const std::vector<game_data::weapon_name> game_data::glove_names =
 {
 	{0, "Default"},
 	{GLOVE_STUDDED_BLOODHOUND, "Bloodhound"},
@@ -80,7 +94,7 @@ const std::vector<weapon_name> k_glove_names =
 	{GLOVE_HYDRA, "Hydra"}
 };
 
-const std::vector<weapon_name> k_weapon_names =
+const std::vector<game_data::weapon_name> game_data::weapon_names =
 {
 	{WEAPON_KNIFE, "Knife"},
 	{GLOVE_T_SIDE, "Glove"},
@@ -100,6 +114,7 @@ const std::vector<weapon_name> k_weapon_names =
 	{16, "M4A4"},
 	{17, "MAC-10"},
 	{27, "MAG-7"},
+	{23, "MP5-SD"},
 	{33, "MP7"},
 	{34, "MP9"},
 	{28, "Negev"},
@@ -119,7 +134,7 @@ const std::vector<weapon_name> k_weapon_names =
 	{25, "XM1014"},
 };
 
-const std::vector<quality_name> k_quality_names =
+const std::vector<game_data::quality_name> game_data::quality_names =
 {
 	{0, "Default"},
 	{1, "Genuine"},
