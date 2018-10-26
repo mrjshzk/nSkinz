@@ -15,7 +15,7 @@ mirv_listentities isPlayer=1
 it's unique per Steam account
 when you are done setting it up, click update and jump _before_ a round start (or demo begin) and hit play.
 
-The default paintkit for gloves / knifes is "workshop_default" (at start of list).
+The default paintkit for gloves / weapons is "workshop_default" (at start of list).
 
 All credit goes to
 https://github.com/namazso/nSkinz
