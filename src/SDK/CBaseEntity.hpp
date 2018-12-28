@@ -19,7 +19,7 @@ namespace sdk
 
 		bool IsPlayer(void) /* const */
 		{
-			return get_vfunc<bool(__thiscall *)(C_BaseEntity*)>(this, 152)(this);
+			return get_vfunc<bool(__thiscall *)(C_BaseEntity*)>(this, 153)(this);
 		};
 	};
 
