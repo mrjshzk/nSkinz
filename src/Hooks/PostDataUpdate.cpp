@@ -192,7 +192,7 @@ static auto post_data_update_start() -> void
 			const auto glove_config = g_config.get_by_definition_index(player_info.userid, GLOVE_T_SIDE);
 
 			static std::map<uint64_t, sdk::CBaseHandle> glove_handles;
-			if (glove_handles.find(player_info.xuid) == glove_handles.end())  glove_handles[player_info.xuid] = sdk::CBaseHandle(0);
+			if (glove_handles.find(player_info.xuid) == glove_handles.end())  glove_handles[player_info.xuid] = sdk::INVALID_EHANDLE_INDEX;
 			
 			auto cur_glove_handle = glove_handles[player_info.xuid];
 
@@ -212,8 +212,8 @@ static auto post_data_update_start() -> void
 
 			if(local->GetLifeState() != sdk::LifeState::ALIVE)
 			{
-				// We are dead but we have a glove, destroy it
-				if(glove)
+				// We are dead but we have a _own_ glove, destroy it
+				if(glove && cur_glove_handle != sdk::INVALID_EHANDLE_INDEX)
 				{
 					glove->GetClientNetworkable()->SetDestroyedOnRecreateEntities();
 					glove->GetClientNetworkable()->Release();
