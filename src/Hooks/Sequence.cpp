@@ -171,17 +171,9 @@ static auto get_new_animation(const fnv::hash model, const int sequence) -> int
 
 static auto do_sequence_remapping(sdk::CRecvProxyData* data, sdk::C_BaseViewModel* entity) -> void
 {
-	const auto local = static_cast<sdk::C_BasePlayer*>(g_entity_list->GetClientEntity(g_engine->GetLocalPlayer()));
-
-	if(!local)
-		return;
-
-	if(local->GetLifeState() != sdk::LifeState::ALIVE)
-		return;
-
 	const auto owner = get_entity_from_handle<sdk::C_BasePlayer>(entity->GetOwner());
 
-	if(owner != local)
+	if (!(owner && owner->IsPlayer() && static_cast<sdk::C_BasePlayer*>(owner)->GetLifeState() == sdk::LifeState::ALIVE))
 		return;
 
 	const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(entity->GetWeapon());

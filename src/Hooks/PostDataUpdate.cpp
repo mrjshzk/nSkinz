@@ -100,7 +100,8 @@ static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item,
 
 			// Set the weapon model index -- required for paint kits to work on replacement items after the 29/11/2016 update.
 			//item->GetModelIndex() = g_model_info->GetModelIndex(k_weapon_info.at(config->definition_override_index).model);
-			item->SetModelIndex(g_model_info->GetModelIndex(replacement_item->model));
+			int model_index = g_model_info->GetModelIndex(replacement_item->model);
+			item->GetModelIndex() = model_index;
 			item->GetClientNetworkable()->PreDataUpdate(0);
 
 			// We didn't override 0, but some actual weapon, that we have data for

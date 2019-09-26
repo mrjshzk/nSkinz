@@ -17,10 +17,15 @@ namespace sdk
 			get_vfunc<void(__thiscall*)(C_BaseEntity*, int)>(this, 75)(this, index);
 		}
 
+		struct CStudioHdr* OnNewModel(void)
+		{
+			return get_vfunc<struct CStudioHdr* (__thiscall*)(C_BaseEntity*)>(this, 108)(this);
+		}
+
 		bool IsPlayer(void) /* const */
 		{
-			return get_vfunc<bool(__thiscall *)(C_BaseEntity*)>(this, 156)(this);
-		};
+			return get_vfunc<bool(__thiscall *)(C_BaseEntity*)>(this, 157)(this);
+		}
 	};
 
 	class C_BaseCombatCharacter : public C_BaseEntity
