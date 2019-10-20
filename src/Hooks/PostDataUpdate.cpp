@@ -96,13 +96,12 @@ static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item,
 		{
 			const auto old_definition_index = definition_index;
 
-			definition_index = config->definition_override_index;
+			definition_index = short(config->definition_override_index);
 
-			// Set the weapon model index -- required for paint kits to work on replacement items after the 29/11/2016 update.
-			//item->GetModelIndex() = g_model_info->GetModelIndex(k_weapon_info.at(config->definition_override_index).model);
-			int model_index = g_model_info->GetModelIndex(replacement_item->model);
-			item->GetModelIndex() = model_index;
-			item->GetClientNetworkable()->PreDataUpdate(0);
+			const auto override_info = game_data::get_weapon_info(definition_index);
+
+			item->GetModelIndex() = g_model_info->GetModelIndex(replacement_item->model);
+			item->GetClientNetworkable()->OnPreDataChanged(0);
 
 			// We didn't override 0, but some actual weapon, that we have data for
 			if(old_definition_index)
@@ -269,31 +268,6 @@ static auto post_data_update_start() -> void
 					erase_override_if_exists_by_index(player_info.xuid, definition_index);
 			}
 		}
-
-		const auto view_model = get_entity_from_handle<sdk::C_BaseViewModel>(local->GetViewModel());
-
-		if(!view_model)
-			continue;
-
-		const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(view_model->GetWeapon());
-
-		if(!view_model_weapon)
-			continue;
-
-		const auto override_info = game_data::get_weapon_info(view_model_weapon->GetItemDefinitionIndex());
-
-		if(!override_info)
-			continue;
-
-		const auto override_model_index = g_model_info->GetModelIndex(override_info->model);
-		view_model->GetModelIndex() = override_model_index;
-
-		const auto world_model = get_entity_from_handle<sdk::CBaseWeaponWorldModel>(view_model_weapon->GetWeaponWorldModel());
-
-		if(!world_model)
-			continue;
-
-		world_model->GetModelIndex() = override_model_index + 1;
 	}
 }
 
