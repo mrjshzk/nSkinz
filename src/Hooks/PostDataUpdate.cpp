@@ -189,9 +189,6 @@ static auto post_data_update_start(sdk::IClientNetworkable* thisptr) -> void
 		{
 			const auto wearables = local->GetWearables();
 
-			wearables[0] = sdk::INVALID_EHANDLE_INDEX;
-			return;
-
 			const auto glove_config = g_config.get_by_definition_index(player_info.userid, GLOVE_T_SIDE);
 
 			static std::map<uint64_t, sdk::CBaseHandle> glove_handles;
