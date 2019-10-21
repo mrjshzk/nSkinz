@@ -212,16 +212,16 @@ static auto do_sequence_remapping(sdk::CRecvProxyData* data, sdk::C_BaseViewMode
 // Replacement function that will be called when the view model animation sequence changes.
 auto __cdecl hooks::sequence_proxy_fn(const sdk::CRecvProxyData* proxy_data_const, void* entity, void* output) -> void
 {
+	const auto view_model = static_cast<sdk::C_BaseViewModel*>(entity);
+
 	// Ensure our other dynamic object hooks are in place.
 	// Must do this from a game thread.
-	ensure_dynamic_hooks();
+	ensure_dynamic_hooks(view_model);
 
 	static auto original_fn = g_sequence_hook->get_original_function();
 
 	// Remove the constness from the proxy data allowing us to make changes.
 	const auto proxy_data = const_cast<sdk::CRecvProxyData*>(proxy_data_const);
-
-	const auto view_model = static_cast<sdk::C_BaseViewModel*>(entity);
 
 	do_sequence_remapping(proxy_data, view_model);
 

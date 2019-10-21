@@ -35,7 +35,7 @@ auto get_entity_from_handle(sdk::CBaseHandle h) -> T*
 	return static_cast<T*>(g_entity_list->GetClientEntityFromHandle(h));
 }
 
-auto ensure_dynamic_hooks() -> void;
+auto ensure_dynamic_hooks(sdk::C_BaseViewModel* view_model) -> void;
 auto get_client_name() -> const char*;
 
 extern recv_prop_hook* g_sequence_hook;

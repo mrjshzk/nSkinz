@@ -100,7 +100,7 @@ static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item,
 
 			const auto override_info = game_data::get_weapon_info(definition_index);
 
-			item->GetModelIndex() = g_model_info->GetModelIndex(replacement_item->model);
+			item->SetModelIndex(g_model_info->GetModelIndex(replacement_item->model));
 			item->GetClientNetworkable()->OnPreDataChanged(0);
 
 			// We didn't override 0, but some actual weapon, that we have data for
@@ -158,18 +158,18 @@ static auto make_glove(int entry, int serial) -> sdk::C_BaseAttributableItem*
 	return glove;
 }
 
-static auto post_data_update_start() -> void
+static auto post_data_update_start(sdk::IClientNetworkable* thisptr) -> void
 {
-	for (int i = 1; i < (1 + sdk::MAX_PLAYERS); ++i)
+	if(auto cu = thisptr->GetIClientUnknown())
 	{
-		const auto be = static_cast<sdk::C_BaseEntity*>(g_entity_list->GetClientEntity(i));
+		const auto be = cu->GetBaseEntity();
 
-		if (!(nullptr != be && be->IsPlayer())) continue;
+		if (!(nullptr != be && be->IsPlayer())) return;
 
 		sdk::C_BasePlayer* local = static_cast<sdk::C_BasePlayer*>(be);
 
 		if (!local)
-			continue;
+			return;
 			
 		const auto local_index = local->GetIndex();
 
@@ -183,11 +183,14 @@ static auto post_data_update_start() -> void
 
 		sdk::player_info_t player_info;
 		if(!g_engine->GetPlayerInfo(local_index, &player_info))
-			continue;
+			return;
 
 		// Handle glove config
 		{
 			const auto wearables = local->GetWearables();
+
+			wearables[0] = sdk::INVALID_EHANDLE_INDEX;
+			return;
 
 			const auto glove_config = g_config.get_by_definition_index(player_info.userid, GLOVE_T_SIDE);
 
@@ -219,7 +222,7 @@ static auto post_data_update_start() -> void
 					glove->GetClientNetworkable()->Release();
 				}
 
-				continue;
+				return;
 			}
 
 			if(glove_config && glove_config->definition_override_index)
@@ -268,12 +271,37 @@ static auto post_data_update_start() -> void
 					erase_override_if_exists_by_index(player_info.xuid, definition_index);
 			}
 		}
+
+		const auto view_model = get_entity_from_handle<sdk::C_BaseViewModel>(local->GetViewModel());
+
+		if (!view_model)
+			return;
+
+		const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(view_model->GetWeapon());
+
+		if (!view_model_weapon)
+			return;
+
+		const auto override_info = game_data::get_weapon_info(view_model_weapon->GetItemDefinitionIndex());
+
+		if (!override_info)
+			return;
+
+		const auto override_model_index = g_model_info->GetModelIndex(override_info->model);
+		view_model->GetModelIndex() = override_model_index;
+
+		const auto world_model = get_entity_from_handle<sdk::CBaseWeaponWorldModel>(view_model_weapon->GetWeaponWorldModel());
+
+		if (!world_model)
+			return;
+
+		world_model->GetModelIndex() = override_model_index + 1;
 	}
 }
 
 auto __fastcall hooks::CCSPlayer_PostDataUpdate::hooked(sdk::IClientNetworkable* thisptr, void*, int update_type) -> void
 {
-	post_data_update_start();
+	post_data_update_start(thisptr);
 
 	return m_original(thisptr, nullptr, update_type);
 }

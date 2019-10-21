@@ -45,7 +45,7 @@ sdk::C_CS_PlayerResource**	g_player_resource;
 
 recv_prop_hook*				g_sequence_hook;
 
-auto ensure_dynamic_hooks() -> void
+auto ensure_dynamic_hooks(sdk::C_BaseViewModel* view_model) -> void
 {
 	// find by xref to "CHudSaveStatus"
 	const auto hss = get_vfunc<char*>(g_client, 87);
@@ -62,12 +62,25 @@ auto ensure_dynamic_hooks() -> void
 
 	const auto local_index = g_engine->GetLocalPlayer();
 	const auto local = static_cast<sdk::C_BasePlayer*>(g_entity_list->GetClientEntity(local_index));
-	if(local)
+	if(view_model)
 	{
-		static vmt_multi_hook player_hook;
-		const auto networkable = static_cast<sdk::IClientNetworkable*>(local);
-		if(player_hook.initialize_and_hook_instance(networkable))
-			player_hook.apply_hook<hooks::CCSPlayer_PostDataUpdate>(7);
+		if (auto owner_ent = g_entity_list->GetClientEntityFromHandle(view_model->GetOwner()))
+		{
+			if (auto owner_be = owner_ent->GetBaseEntity())
+			{
+				if (owner_be->IsPlayer())
+				{
+					static std::map<proc_t*,vmt_multi_hook> player_hooks;
+
+					const auto networkable = static_cast<sdk::IClientNetworkable*>(owner_ent);
+
+					auto& player_hook = player_hooks[*reinterpret_cast<proc_t**>(owner_ent)]; // since we are going to ruin the vtable, we use another one
+
+					if (player_hook.initialize_and_hook_instance(networkable))
+						player_hook.apply_hook<hooks::CCSPlayer_PostDataUpdate>(7);
+				}
+			}
+		}
 	}
 }
 
