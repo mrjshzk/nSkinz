@@ -22,13 +22,28 @@ namespace sdk
 			return get_vfunc<struct CStudioHdr* (__thiscall*)(C_BaseEntity*)>(this, 108)(this);
 		}
 
+		void UpdateOnRemove(void)
+		{
+			get_vfunc<void(__thiscall*)(C_BaseEntity*)>(this, 75)(this);
+		}
+
 		bool IsPlayer(void) /* const */
 		{
 			return get_vfunc<bool(__thiscall *)(C_BaseEntity*)>(this, 157)(this);
 		}
 	};
 
-	class C_BaseCombatCharacter : public C_BaseEntity
+	class C_BaseAnimating : public C_BaseEntity
+	{
+	public:
+		void UpdateClientSideAnimation(void)
+		{
+			get_vfunc<void(__thiscall*)(C_BaseAnimating*)>(this, 223)(this);
+		}
+
+	};
+
+	class C_BaseCombatCharacter : public C_BaseAnimating
 	{
 	public:
 		NETVAR(GetWeapons, "CBaseCombatCharacter", "m_hMyWeapons", std::array<CBaseHandle, MAX_WEAPONS>);
@@ -42,7 +57,7 @@ namespace sdk
 		NETVAR(GetViewModel, "CBasePlayer", "m_hViewModel[0]", CBaseHandle);
 	};
 
-	class C_BaseCombatWeapon : public C_BaseEntity
+	class C_BaseCombatWeapon : public C_BaseAnimating
 	{
 	public:
 		NETVAR(GetViewModelIndex, "CBaseCombatWeapon", "m_iViewModelIndex", int);
@@ -66,7 +81,7 @@ namespace sdk
 		NETVAR(GetFallbackStatTrak, "CBaseAttributableItem", "m_nFallbackStatTrak", unsigned);
 	};
 
-	class C_BaseViewModel : public C_BaseEntity
+	class C_BaseViewModel : public C_BaseAnimating
 	{
 	public:
 		NETVAR(GetOwner, "CBaseViewModel", "m_hOwner", CBaseHandle);
@@ -90,7 +105,7 @@ namespace sdk
 		NETVAR(GetMusicKits, "CCSPlayerResource", "m_nMusicID", unsigned[MAX_PLAYERS]);
 	};
 
-	class CBaseWeaponWorldModel : public C_BaseEntity
+	class CBaseWeaponWorldModel : public C_BaseAnimating
 	{
 	};
 }

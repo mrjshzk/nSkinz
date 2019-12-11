@@ -2,7 +2,7 @@
 
 namespace sdk
 {
-	enum ClientFrameStage_t : int
+	enum ClientFrameStage_t
 	{
 		FRAME_UNDEFINED = -1,
 		FRAME_START,

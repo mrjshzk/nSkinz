@@ -27,6 +27,13 @@
 
 namespace hooks
 {
+	struct IBaseClientDLL_FrameStageNotify
+	{
+		using Fn = void __fastcall(sdk::IBaseClientDLL * thisptr, void*, sdk::ClientFrameStage_t curStage);
+		static Fn hooked;
+		static Fn* m_original;
+	};
+
 	struct CCSPlayer_PostDataUpdate
 	{
 		using Fn = void __fastcall(sdk::IClientNetworkable* thisptr, void*, int update_type);

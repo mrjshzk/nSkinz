@@ -150,6 +150,10 @@ static auto get_new_animation(const fnv::hash model, const int sequence) -> int
 			}
 		}
 	case FNV("models/weapons/v_knife_ursus.mdl"):
+	case FNV("models/weapons/v_knife_cord.mdl"):
+	case FNV("models/weapons/v_knife_canis.mdl"):
+	case FNV("models/weapons/v_knife_outdoor.mdl"):
+	case FNV("models/weapons/v_knife_skeleton.mdl"):
 		{
 			switch (sequence)
 			{
@@ -216,7 +220,7 @@ auto __cdecl hooks::sequence_proxy_fn(const sdk::CRecvProxyData* proxy_data_cons
 
 	// Ensure our other dynamic object hooks are in place.
 	// Must do this from a game thread.
-	ensure_dynamic_hooks(view_model);
+	ensure_dynamic_hooks();
 
 	static auto original_fn = g_sequence_hook->get_original_function();
 

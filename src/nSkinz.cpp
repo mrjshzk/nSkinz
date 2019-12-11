@@ -29,58 +29,35 @@
 #include "update_check.hpp"
 #include "config.hpp"
 
-sdk::IBaseClientDLL*		g_client;
-sdk::IClientEntityList*		g_entity_list;
-sdk::IVEngineClient*		g_engine;
-sdk::IVModelInfoClient*		g_model_info;
-sdk::IGameEventManager2*	g_game_event_manager;
-sdk::ILocalize*				g_localize;
-sdk::IInputSystem*			g_input_system;
+sdk::IBaseClientDLL* g_client;
+sdk::IClientEntityList* g_entity_list;
+sdk::IVEngineClient* g_engine;
+sdk::IVModelInfoClient* g_model_info;
+sdk::IGameEventManager2* g_game_event_manager;
+sdk::ILocalize* g_localize;
+sdk::IInputSystem* g_input_system;
 
-sdk::CBaseClientState**		g_client_state;
-sdk::C_CS_PlayerResource**	g_player_resource;
+sdk::CBaseClientState** g_client_state;
+sdk::C_CS_PlayerResource** g_player_resource;
 
 //vmt_smart_hook*				g_client_hook;
 //vmt_smart_hook*				g_game_event_manager_hook;
 
-recv_prop_hook*				g_sequence_hook;
+recv_prop_hook* g_sequence_hook;
 
-auto ensure_dynamic_hooks(sdk::C_BaseViewModel* view_model) -> void
+auto ensure_dynamic_hooks() -> void
 {
 	// find by xref to "CHudSaveStatus"
 	const auto hss = get_vfunc<char*>(g_client, 87);
 	const auto hud = *(void**)(hss + 7);
 	const auto off = *(int32_t*)(hss + 12);
-	const auto fn = (void*(__thiscall *)(void*, const char*))(hss + 16 + off);
+	const auto fn = (void* (__thiscall*)(void*, const char*))(hss + 16 + off);
 	const auto notice_hud = fn(hud, "SFHudDeathNoticeAndBotStatus");
-	if(notice_hud)
+	if (notice_hud)
 	{
 		static vmt_multi_hook notice_hook;
-		if(notice_hook.initialize_and_hook_instance(notice_hud))
+		if (notice_hook.initialize_and_hook_instance(notice_hud))
 			notice_hook.apply_hook<hooks::SFHudDeathNoticeAndBotStatus_FireGameEvent>(1);
-	}
-
-	const auto local_index = g_engine->GetLocalPlayer();
-	const auto local = static_cast<sdk::C_BasePlayer*>(g_entity_list->GetClientEntity(local_index));
-	if(view_model)
-	{
-		if (auto owner_ent = g_entity_list->GetClientEntityFromHandle(view_model->GetOwner()))
-		{
-			if (auto owner_be = owner_ent->GetBaseEntity())
-			{
-				if (owner_be->IsPlayer())
-				{
-					static std::map<proc_t*,vmt_multi_hook> player_hooks;
-
-					const auto networkable = static_cast<sdk::IClientNetworkable*>(owner_ent);
-
-					auto& player_hook = player_hooks[*reinterpret_cast<proc_t**>(owner_ent)]; // since we are going to ruin the vtable, we use another one
-
-					if (player_hook.initialize_and_hook_instance(networkable))
-						player_hook.apply_hook<hooks::CCSPlayer_PostDataUpdate>(7);
-				}
-			}
-		}
 	}
 }
 
@@ -96,6 +73,32 @@ auto get_client_name() -> const char*
 	if (!name)
 		name = platform::get_module_info("client_panorama.dll").first ? "client_panorama.dll" : "client.dll";
 	return name;
+}
+
+void post_data_update_start(sdk::C_BasePlayer* local);
+
+hooks::IBaseClientDLL_FrameStageNotify::Fn* hooks::IBaseClientDLL_FrameStageNotify::m_original;
+
+auto __fastcall hooks::IBaseClientDLL_FrameStageNotify::hooked(sdk::IBaseClientDLL* thisptr, void*, sdk::ClientFrameStage_t curStage) -> void
+{
+	if (curStage == sdk::FRAME_NET_UPDATE_POSTDATAUPDATE_START)
+	{
+		for (int idx = 0; idx <= sdk::MAX_PLAYERS; ++idx)
+		{
+			if (auto ent = g_entity_list->GetClientEntity(idx))
+			{
+				if (auto bent = ent->GetBaseEntity())
+				{
+					if (bent->IsPlayer())
+					{
+						post_data_update_start(static_cast<sdk::C_BasePlayer*>(bent));
+					}
+				}
+			}
+		}
+	}
+
+	m_original(thisptr, nullptr, curStage);
 }
 
 auto initialize(void* instance) -> void
@@ -132,6 +135,10 @@ auto initialize(void* instance) -> void
 	const auto team_prop = team_arr_prop->m_pDataTable->m_pProps;
 	const auto proxy_addr = std::uintptr_t(team_prop->m_ProxyFn);
 	g_player_resource = *reinterpret_cast<sdk::C_CS_PlayerResource***>(proxy_addr + 0x10);
+
+	static vmt_multi_hook baseclientdll_hook;
+	if (baseclientdll_hook.initialize_and_hook_instance(g_client))
+		baseclientdll_hook.apply_hook<hooks::IBaseClientDLL_FrameStageNotify>(37);
 }
 
 // If we aren't unloaded correctly (like when you close csgo)
