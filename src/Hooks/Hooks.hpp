@@ -34,13 +34,6 @@ namespace hooks
 		static Fn* m_original;
 	};
 
-	struct CCSPlayer_PostDataUpdate
-	{
-		using Fn = void __fastcall(sdk::IClientNetworkable* thisptr, void*, int update_type);
-		static Fn hooked;
-		static Fn* m_original;
-	};
-
 	struct SFHudDeathNoticeAndBotStatus_FireGameEvent
 	{
 		using Fn = void __fastcall(void* thisptr, void*, sdk::IGameEvent* event);

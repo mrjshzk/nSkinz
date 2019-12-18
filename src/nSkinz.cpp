@@ -75,7 +75,7 @@ auto get_client_name() -> const char*
 	return name;
 }
 
-void post_data_update_start(sdk::C_BasePlayer* local);
+void post_data_update_end(sdk::C_BasePlayer* local);
 
 hooks::IBaseClientDLL_FrameStageNotify::Fn* hooks::IBaseClientDLL_FrameStageNotify::m_original;
 
@@ -91,7 +91,7 @@ auto __fastcall hooks::IBaseClientDLL_FrameStageNotify::hooked(sdk::IBaseClientD
 				{
 					if (bent->IsPlayer())
 					{
-						post_data_update_start(static_cast<sdk::C_BasePlayer*>(bent));
+						post_data_update_end(static_cast<sdk::C_BasePlayer*>(bent));
 					}
 				}
 			}

@@ -59,7 +59,7 @@ static auto erase_override_if_exists_by_index(const uint64_t xuid, const int def
 }
 
 static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item, const item_setting* config,
-	const uint64_t xuid, const unsigned xuid_low) -> void
+	const uint64_t xuid, const unsigned xuid_low, bool is_glove = false) -> void
 {
 	// Force fallback values to be used.
 	item->GetItemIDHigh() = -1;
@@ -99,7 +99,9 @@ static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item,
 
 			definition_index = short(config->definition_override_index);
 
-			item->OnPreDataChanged(0);
+			item->GetClientNetworkable()->PreDataUpdate(0);
+			item->GetClientNetworkable()->OnPreDataChanged(0);
+			item->GetClientNetworkable()->PostDataUpdate(0);
 			item->SetModelIndex(g_model_info->GetModelIndex(replacement_item->model));
 
 			// We didn't override 0, but some actual weapon, that we have data for
@@ -157,7 +159,7 @@ static auto make_glove(int entry, int serial) -> sdk::C_BaseAttributableItem*
 	return glove;
 }
 
-void post_data_update_start(sdk::C_BasePlayer* local)
+void post_data_update_end(sdk::C_BasePlayer* local)
 {
 	const auto local_index = local->GetIndex();
 
@@ -179,26 +181,29 @@ void post_data_update_start(sdk::C_BasePlayer* local)
 
 		const auto glove_config = g_config.get_by_definition_index(player_info.userid, GLOVE_T_SIDE);
 
-		static auto glove_handle = sdk::CBaseHandle(0);
+		static std::map<uint64_t, sdk::CBaseHandle> glove_handles;
+		if (glove_handles.find(player_info.xuid) == glove_handles.end())  glove_handles[player_info.xuid] = sdk::INVALID_EHANDLE_INDEX;
+
+		auto cur_glove_handle = glove_handles[player_info.xuid];
 
 		auto glove = get_entity_from_handle<sdk::C_BaseAttributableItem>(wearables[0]);
 
 		if (!glove) // There is no glove
 		{
 			// Try to get our last created glove
-			const auto our_glove = get_entity_from_handle<sdk::C_BaseAttributableItem>(glove_handle);
+			const auto our_glove = get_entity_from_handle<sdk::C_BaseAttributableItem>(cur_glove_handle);
 
 			if (our_glove) // Our glove still exists
 			{
-				wearables[0] = glove_handle;
+				wearables[0] = cur_glove_handle;
 				glove = our_glove;
 			}
 		}
 
 		if (local->GetLifeState() != sdk::LifeState::ALIVE)
 		{
-			// We are dead but we have a glove, destroy it
-			if (glove)
+			// We are dead but we have a _own_ glove, destroy it
+			if (glove && cur_glove_handle != sdk::INVALID_EHANDLE_INDEX)
 			{
 				glove->GetClientNetworkable()->SetDestroyedOnRecreateEntities();
 				glove->GetClientNetworkable()->Release();
@@ -220,13 +225,13 @@ void post_data_update_start(sdk::C_BasePlayer* local)
 				wearables[0] = entry | serial << 16;
 
 				// Let's store it in case we somehow lose it.
-				glove_handle = wearables[0];
+				glove_handles[player_info.xuid] = wearables[0];
 			}
 
 			// Thanks, Beakers
 			glove->GetIndex() = -1;
 
-			apply_config_on_attributable_item(glove, glove_config, player_info.xuid, player_info.xuid_low);
+			apply_config_on_attributable_item(glove, glove_config, player_info.xuid, player_info.xuid_low, true);
 		}
 	}
 
@@ -279,12 +284,3 @@ void post_data_update_start(sdk::C_BasePlayer* local)
 
 	world_model->GetModelIndex() = override_model_index + 1;
 }
-
-auto __fastcall hooks::CCSPlayer_PostDataUpdate::hooked(sdk::IClientNetworkable* thisptr, void*, int update_type) -> void
-{
-	post_data_update_start(static_cast<sdk::C_BasePlayer*>(thisptr));
-
-	return m_original(thisptr, nullptr, update_type);
-}
-
-hooks::CCSPlayer_PostDataUpdate::Fn* hooks::CCSPlayer_PostDataUpdate::m_original;
