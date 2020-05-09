@@ -172,14 +172,6 @@ namespace render
 				//d3d9_state state;
 				//state.save(thisptr);
 
-				IDirect3DStateBlock9* state;
-				thisptr->CreateStateBlock(D3DSBT_PIXELSTATE, &state);
-
-				//fix drawing without cl_showfps
-				thisptr->SetRenderState(D3DRS_COLORWRITEENABLE, 0xFFFFFFFF);
-
-				//thisptr->SetRenderState(D3DRS_SRGBWRITEENABLE, 0);
-
 				static void* saved_hwnd;
 
 				if (s_active)
@@ -193,6 +185,14 @@ namespace render
 						std::swap(saved_hwnd, g_input_system->get_window());
 					}
 
+					IDirect3DStateBlock9* state;
+					thisptr->CreateStateBlock(D3DSBT_PIXELSTATE, &state);
+
+					//fix drawing without cl_showfps
+					thisptr->SetRenderState(D3DRS_COLORWRITEENABLE, 0xFFFFFFFF);
+
+					//thisptr->SetRenderState(D3DRS_SRGBWRITEENABLE, 0);
+
 					ImGui::GetIO().MouseDrawCursor = true;
 
 					ImGui_ImplDX9_NewFrame();
@@ -200,6 +200,10 @@ namespace render
 					draw_gui();
 
 					ImGui::Render();
+
+					//state.load(thisptr);
+					state->Apply();
+					state->Release();
 				}
 				else
 				{
@@ -211,10 +215,6 @@ namespace render
 						std::swap(saved_hwnd, g_input_system->get_window());
 					}
 				}
-
-				//state.load(thisptr);
-				state->Apply();
-				state->Release();
 			}
 
 			return m_original(thisptr);

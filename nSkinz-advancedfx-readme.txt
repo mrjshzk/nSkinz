@@ -11,11 +11,14 @@ Then it should say it's loaded in console.
 Then when you press Insert it should show the nSkinz GUI.
 The XUID (bellow Enabled check box)
 you can get from
-mirv_listentities isPlayer=1
+mirv_listentities isPlayer=1 sort=distance
 it's unique per Steam account
 when you are done setting it up, click update and jump _before_ a round start (or demo begin) and hit play.
 
 The default paintkit for gloves / weapons is "workshop_default" (at start of list).
+
+Known problems:
+- New skins only work in new demos.
 
 All credit goes to
 https://github.com/namazso/nSkinz

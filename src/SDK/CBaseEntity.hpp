@@ -12,19 +12,9 @@ namespace sdk
 		NETVAR(GetModelIndex, "CBaseEntity", "m_nModelIndex", unsigned);
 		NETVAR(GetOwnerEntity, "CBaseEntity", "m_hOwnerEntity", CBaseHandle);
 
-		void SetModelIndex(const int index)
+		void ValidateModelIndex()
 		{
-			get_vfunc<void(__thiscall*)(C_BaseEntity*, int)>(this, 75)(this, index);
-		}
-
-		struct CStudioHdr* OnNewModel(void)
-		{
-			return get_vfunc<struct CStudioHdr* (__thiscall*)(C_BaseEntity*)>(this, 108)(this);
-		}
-
-		void UpdateOnRemove(void)
-		{
-			get_vfunc<void(__thiscall*)(C_BaseEntity*)>(this, 75)(this);
+			get_vfunc<void(__thiscall*)(C_BaseEntity*)>(this, 54)(this);
 		}
 
 		bool IsPlayer(void) /* const */

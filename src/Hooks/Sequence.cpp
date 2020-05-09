@@ -207,7 +207,7 @@ static auto do_sequence_remapping(sdk::CRecvProxyData* data, sdk::C_BaseViewMode
 	if(!weapon_info)
 		return;
 
-	const auto override_model = weapon_info->model;
+	const auto override_model = weapon_info->viewModel;
 
 	auto& sequence = data->m_Value.m_Int;
 	sequence = get_new_animation(fnv::hash_runtime(override_model), sequence);

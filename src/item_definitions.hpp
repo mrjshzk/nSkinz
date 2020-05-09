@@ -113,12 +113,14 @@ namespace game_data
 	// Stupid MSVC requires separate constexpr constructors for any initialization
 	struct weapon_info
 	{
-		constexpr weapon_info(const char* model, const char* icon = nullptr) :
-			model(model),
+		constexpr weapon_info(const char* worldModel, const char* viewModel, const char* icon = nullptr) :
+			worldModel(worldModel),
+			viewModel(viewModel),
 			icon(icon)
 		{}
 
-		const char* model;
+		const char* worldModel;
+		const char* viewModel;
 		const char* icon;
 	};
 

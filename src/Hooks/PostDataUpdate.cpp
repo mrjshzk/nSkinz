@@ -102,7 +102,11 @@ static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item,
 			item->GetClientNetworkable()->PreDataUpdate(0);
 			item->GetClientNetworkable()->OnPreDataChanged(0);
 			item->GetClientNetworkable()->PostDataUpdate(0);
-			item->SetModelIndex(g_model_info->GetModelIndex(replacement_item->model));
+
+			//item->GetViewModelIndex() = g_model_info->GetModelIndex(replacement_item->viewModel);
+			//item->GetWorldModelIndex() = g_model_info->GetModelIndex(replacement_item->worldModel);
+			item->GetModelIndex() = g_model_info->GetModelIndex(replacement_item->worldModel);
+			item->ValidateModelIndex();
 
 			// We didn't override 0, but some actual weapon, that we have data for
 			if (old_definition_index)
@@ -229,7 +233,7 @@ void post_data_update_end(sdk::C_BasePlayer* local)
 			}
 
 			// Thanks, Beakers
-			glove->GetIndex() = -1;
+			//glove->GetIndex() = -1;
 
 			apply_config_on_attributable_item(glove, glove_config, player_info.xuid, player_info.xuid_low, true);
 		}
@@ -274,13 +278,15 @@ void post_data_update_end(sdk::C_BasePlayer* local)
 	if (!override_info)
 		return;
 
-	const auto override_model_index = g_model_info->GetModelIndex(override_info->model);
+	const auto override_model_index = g_model_info->GetModelIndex(override_info->viewModel);
 	view_model->GetModelIndex() = override_model_index;
+	view_model->ValidateModelIndex();
 
 	const auto world_model = get_entity_from_handle<sdk::CBaseWeaponWorldModel>(view_model_weapon->GetWeaponWorldModel());
 
 	if (!world_model)
 		return;
 
-	world_model->GetModelIndex() = override_model_index + 1;
+	world_model->GetModelIndex() = g_model_info->GetModelIndex(override_info->worldModel);
+	world_model->ValidateModelIndex();
 }
