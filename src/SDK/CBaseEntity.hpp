@@ -19,7 +19,7 @@ namespace sdk
 
 		bool IsPlayer(void) /* const */
 		{
-			return get_vfunc<bool(__thiscall *)(C_BaseEntity*)>(this, 157)(this);
+			return get_vfunc<bool(__thiscall *)(C_BaseEntity*)>(this, 158)(this);
 		}
 	};
 
@@ -28,7 +28,7 @@ namespace sdk
 	public:
 		void UpdateClientSideAnimation(void)
 		{
-			get_vfunc<void(__thiscall*)(C_BaseAnimating*)>(this, 223)(this);
+			get_vfunc<void(__thiscall*)(C_BaseAnimating*)>(this, 224)(this);
 		}
 
 	};
