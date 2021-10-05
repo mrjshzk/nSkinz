@@ -59,7 +59,8 @@ const game_data::weapon_info* game_data::get_weapon_info(int defindex)
 		{GLOVE_LEATHER_WRAP,{"models/weapons/w_models/arms/w_glove_handwrap_leathery.mdl","models/weapons/v_models/arms/glove_handwrap_leathery/v_glove_handwrap_leathery.mdl"}},
 		{GLOVE_MOTORCYCLE,{"models/weapons/w_models/arms/w_glove_motorcycle.mdl","models/weapons/v_models/arms/glove_motorcycle/v_glove_motorcycle.mdl"}},
 		{GLOVE_SPECIALIST,{"models/weapons/w_models/arms/w_glove_specialist.mdl","models/weapons/v_models/arms/glove_specialist/v_glove_specialist.mdl"}},
-		{GLOVE_HYDRA,{"models/weapons/w_models/arms/w_glove_bloodhound_hydra.mdl","models/weapons/v_models/arms/glove_bloodhound_hydra/v_glove_bloodhound_hydra.mdl"}}
+		{GLOVE_HYDRA,{"models/weapons/w_models/arms/w_glove_bloodhound_hydra.mdl","models/weapons/v_models/arms/glove_bloodhound_hydra/v_glove_bloodhound_hydra.mdl"}},
+		{GLOVE_BROKEN_FANG,{"models/weapons/w_models/arms/w_glove_bloodhound_brokenfang.mdl","models/weapons/v_models/arms/glove_bloodhound/v_glove_bloodhound_brokenfang.mdl"}}
 	};
 
 	const auto entry = info.find(defindex);
@@ -101,7 +102,8 @@ const std::vector<game_data::weapon_name> game_data::glove_names =
 	{GLOVE_LEATHER_WRAP, "Handwrap"},
 	{GLOVE_MOTORCYCLE, "Motorcycle"},
 	{GLOVE_SPECIALIST, "Specialist"},
-	{GLOVE_HYDRA, "Hydra"}
+	{GLOVE_HYDRA, "Hydra"},
+	{GLOVE_BROKEN_FANG, "Broken Fang"}
 };
 
 const std::vector<game_data::weapon_name> game_data::weapon_names =
