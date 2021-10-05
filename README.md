@@ -1,3 +1,17 @@
+## Users coming from the original [namazso / nSkinz](https://github.com/namazso/nSkinz):
+
+This fork is originally meant for demos / movie makers and can replace multiple players by XUID, so you will need to enter your XUID in the XUID field!
+
+### Getting your XUID:
+You can get your own XUID after starting the game from the game's console, there should be a message like this
+```
+SDR RelayNetworkStatus:  avail=Attempting  config=OK  anyrelay=Attempting   (Performing ping measurement)
+AuthStatus (steamid:12345678901234567):  OK  (OK)
+```
+12345678901234567 would be the XUID.
+
+----
+
 ![Screenshot](http://i.imgur.com/KfnFQrX.jpg)
 
 ### nSkinz
