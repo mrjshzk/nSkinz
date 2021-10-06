@@ -173,6 +173,7 @@ namespace render
 				//state.save(thisptr);
 
 				static void* saved_hwnd;
+				static bool con_visible;
 
 				if (s_active)
 				{
@@ -183,6 +184,8 @@ namespace render
 						//g_input_system->EnableInput(false);
 						//mouse_enabled = false;
 						std::swap(saved_hwnd, g_input_system->get_window());
+						con_visible = g_engine->Con_IsVisible();
+						if(!con_visible) g_engine->ClientCmd_Unrestricted("toggleconsole");
 					}
 
 					IDirect3DStateBlock9* state;
@@ -209,6 +212,7 @@ namespace render
 				{
 					if (saved_hwnd)
 					{
+						if(!con_visible) g_engine->ClientCmd_Unrestricted("toggleconsole");
 						//g_engine->ClientCmd_Unrestricted("cl_mouseenable 1");
 						g_input_system->EnableInput(true); //reenabling this fixed the movement.
 						//mouse_enabled = true;

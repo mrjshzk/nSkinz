@@ -44,6 +44,10 @@ namespace sdk
 			return get_vfunc<bool(__thiscall *)(IVEngineClient*, int)>(this, 9)(this, userid);
 		}
 
+		bool Con_IsVisible(void) {
+			return get_vfunc<bool(__thiscall*)(IVEngineClient*)>(this, 11)(this);
+		}
+
 		int GetLocalPlayer()
 		{
 			return get_vfunc<int(__thiscall *)(IVEngineClient*)>(this, 12)(this);
