@@ -1,19 +1,27 @@
-You need to replace the ones of latest HLAE with the files in this ZIP.
-
-Then load the game with HLAE.
-
-Then use
+Loading from HLAE inside CS:GO:
 mirv_loadlibrary "C:\Path\To\nSkinz.dll"
 
 Then it should say it's loaded in console.
 (You can do in game menu, no need to load map yet.)
 
-Then when you press Insert it should show the nSkinz GUI.
-The XUID (bellow Enabled check box)
-you can get from
-mirv_listentities isPlayer=1 sort=distance
-it's unique per Steam account
-when you are done setting it up, click update and jump _before_ a round start (or demo begin) and hit play.
+Then when you press [INSERT]-key it should show the nSkinz GUI.
+
+The XUID is required for it to work (bellow Enabled check box),
+you can get it from:
+
+- Either
+  mirv_listentities isPlayer=1 sort=distance
+  
+- Or you can get your own XUID after starting the game from the game's console, there should be a message like this:
+  
+  SDR RelayNetworkStatus:  avail=Attempting  config=OK  anyrelay=Attempting   (Performing ping measurement)
+  AuthStatus (steamid:12345678901234567):  OK  (OK)
+  
+  12345678901234567 would be the XUID.
+  
+The XUID is unique per Steam account.
+
+When you are done setting it up, click update and in demos jump _before_ a round start (or demo begin) and hit play.
 
 The default paintkit for gloves / weapons is "workshop_default" (at start of list).
 
@@ -23,7 +31,8 @@ Known problems:
 All credit goes to
 https://github.com/namazso/nSkinz
 
-Please understand the original author probably won't support this modification and we don't plan to provide support at the moment either.
+Please understand the original author probably won't support this modification
+and we don't plan to provide much support at the moment either.
 
 MIT License
 
