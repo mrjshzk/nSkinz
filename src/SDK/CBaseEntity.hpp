@@ -11,6 +11,7 @@ namespace sdk
 		NETVAR_OFFSET(GetIndex, "CBaseEntity", "m_bIsAutoaimTarget", +0x4, int);
 		NETVAR(GetModelIndex, "CBaseEntity", "m_nModelIndex", unsigned);
 		NETVAR(GetOwnerEntity, "CBaseEntity", "m_hOwnerEntity", CBaseHandle);
+		NETVAR(GetNetworkMoveParent, "CBaseEntity", "moveparent", CBaseHandle);
 
 		void ValidateModelIndex()
 		{
@@ -26,11 +27,7 @@ namespace sdk
 	class C_BaseAnimating : public C_BaseEntity
 	{
 	public:
-		void UpdateClientSideAnimation(void)
-		{
-			get_vfunc<void(__thiscall*)(C_BaseAnimating*)>(this, 224)(this);
-		}
-
+		NETVAR(GetBody, "CBaseAnimating", "m_nBody", int);
 	};
 
 	class C_BaseCombatCharacter : public C_BaseAnimating
@@ -69,6 +66,12 @@ namespace sdk
 		NETVAR(GetFallbackSeed, "CBaseAttributableItem", "m_nFallbackSeed", unsigned);
 		NETVAR(GetFallbackWear, "CBaseAttributableItem", "m_flFallbackWear", float);
 		NETVAR(GetFallbackStatTrak, "CBaseAttributableItem", "m_nFallbackStatTrak", unsigned);
+		NETVAR(GetInitialized, "CBaseAttributableItem", "m_bInitialized", bool);
+
+		void GiveToPlayer(C_BaseCombatCharacter* pPlayer) {
+			// References string "[Wearables (%s)(%d)] Giving wearable to player %s(%d)\";
+			get_vfunc<void(__thiscall*)(C_BaseAttributableItem*, C_BaseCombatCharacter*)>(this, 285)(this,pPlayer);
+		}
 	};
 
 	class C_BaseViewModel : public C_BaseAnimating

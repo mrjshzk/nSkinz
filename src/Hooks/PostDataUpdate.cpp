@@ -59,8 +59,10 @@ static auto erase_override_if_exists_by_index(const uint64_t xuid, const int def
 }
 
 static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item, const item_setting* config,
-	const uint64_t xuid, const unsigned xuid_low, bool is_glove = false) -> void
+	const uint64_t xuid, const unsigned xuid_low) -> void
 {
+	item->GetInitialized() = true;
+
 	// Force fallback values to be used.
 	item->GetItemIDHigh() = -1;
 	item->GetItemIDLow() = -1;
@@ -99,10 +101,6 @@ static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item,
 
 			definition_index = short(config->definition_override_index);
 
-			item->GetClientNetworkable()->PreDataUpdate(0);
-			item->GetClientNetworkable()->OnPreDataChanged(0);
-			item->GetClientNetworkable()->PostDataUpdate(0);
-
 			item->GetModelIndex() = g_model_info->GetModelIndex(replacement_item->worldModel);
 			item->ValidateModelIndex();
 
@@ -120,6 +118,10 @@ static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item,
 						icon_override_map[xuid][original_item->icon] = replacement_item->icon;
 				}
 			}
+
+			item->GetClientNetworkable()->PreDataUpdate(0);
+			item->GetClientNetworkable()->OnPreDataChanged(0);
+			item->GetClientNetworkable()->PostDataUpdate(0);
 		}
 	}
 	else
@@ -153,7 +155,7 @@ static auto make_glove(int entry, int serial) -> sdk::C_BaseAttributableItem*
 	assert(glove);
 
 	// He he
-	{
+	/* {
 		static auto set_abs_origin_addr = platform::find_pattern(get_client_name(), "\x55\x8B\xEC\x83\xE4\xF8\x51\x53\x56\x57\x8B\xF1", "xxxxxxxxxxxx");
 
 		const auto set_abs_origin_fn = reinterpret_cast<void(__thiscall*)(void*, const sdk::Vector&)>(set_abs_origin_addr);
@@ -161,7 +163,7 @@ static auto make_glove(int entry, int serial) -> sdk::C_BaseAttributableItem*
 		static constexpr sdk::Vector new_pos = { 10000.f, 10000.f, 10000.f };
 
 		set_abs_origin_fn(glove, new_pos);
-	}
+	}*/
 
 	return glove;
 }
@@ -229,16 +231,19 @@ void post_data_update_end(sdk::C_BasePlayer* local)
 
 				glove = make_glove(entry, serial);
 
-				wearables[0] = entry | serial << 16;
+				glove->GetNetworkMoveParent() = local->GetRefEHandle();
+				glove->GetOwnerEntity() = local->GetRefEHandle();
+				glove->GiveToPlayer(local);
+
+				wearables[0] = glove->GetRefEHandle();
 
 				// Let's store it in case we somehow lose it.
 				glove_handles[player_info.xuid] = wearables[0];
+
+				local->GetBody() = 1;
 			}
 
-			// Thanks, Beakers
-			//glove->GetIndex() = -1;
-
-			apply_config_on_attributable_item(glove, glove_config, player_info.xuid, player_info.xuid_low, true);
+			apply_config_on_attributable_item(glove, glove_config, player_info.xuid, player_info.xuid_low);
 		}
 	}
 
@@ -268,20 +273,20 @@ void post_data_update_end(sdk::C_BasePlayer* local)
 
 	const auto view_model = get_entity_from_handle<sdk::C_BaseViewModel>(local->GetViewModel());
 
-	if (!view_model)
-		return;
+	if (view_model) {
 
-	const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(view_model->GetWeapon());
+		const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(view_model->GetWeapon());
 
-	if (!view_model_weapon)
-		return;
+		if (view_model_weapon) {
 
-	const auto override_info = game_data::get_weapon_info(view_model_weapon->GetItemDefinitionIndex());
+			const auto override_info = game_data::get_weapon_info(view_model_weapon->GetItemDefinitionIndex());
 
-	if (!override_info)
-		return;
+			if (override_info) {
+				const auto override_model_index = g_model_info->GetModelIndex(override_info->viewModel);
+				view_model->GetModelIndex() = override_model_index;
+			}
+		}
 
-	const auto override_model_index = g_model_info->GetModelIndex(override_info->viewModel);
-	view_model->GetModelIndex() = override_model_index;
-	view_model->ValidateModelIndex();
+		view_model->ValidateModelIndex();
+	}
 }
