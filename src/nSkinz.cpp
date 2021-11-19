@@ -52,7 +52,7 @@ auto ensure_dynamic_hooks() -> void
 	const auto hud = *(void**)(hss + 7);
 	const auto off = *(int32_t*)(hss + 12);
 	const auto fn = (void* (__thiscall*)(void*, const char*))(hss + 16 + off);
-	const auto notice_hud = fn(hud, "SFHudDeathNoticeAndBotStatus");
+	const auto notice_hud = fn(hud, "CCSGO_HudDeathNotice");
 	if (notice_hud)
 	{
 		static vmt_multi_hook notice_hook;

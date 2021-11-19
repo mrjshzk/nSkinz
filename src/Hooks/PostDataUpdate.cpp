@@ -97,17 +97,7 @@ static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item,
 		// We have info about what we gonna override it to
 		if (const auto replacement_item = game_data::get_weapon_info(config->definition_override_index))
 		{
-			const auto old_definition_index = definition_index;
-
-			definition_index = short(config->definition_override_index);
-
-			item->GetModelIndex() = g_model_info->GetModelIndex(replacement_item->worldModel);
-			item->ValidateModelIndex();
-
-			if (const auto world_model = get_entity_from_handle<sdk::CBaseWeaponWorldModel>(item->GetWeaponWorldModel())) {
-				world_model->GetModelIndex() = g_model_info->GetModelIndex(replacement_item->worldModel);
-				world_model->ValidateModelIndex();
-			}
+			const int old_definition_index = definition_index;
 
 			// We didn't override 0, but some actual weapon, that we have data for
 			if (old_definition_index)
@@ -117,6 +107,16 @@ static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item,
 					if (original_item->icon && replacement_item->icon)
 						icon_override_map[xuid][original_item->icon] = replacement_item->icon;
 				}
+			}
+
+			definition_index = short(config->definition_override_index);
+
+			item->GetModelIndex() = g_model_info->GetModelIndex(replacement_item->worldModel);
+			item->ValidateModelIndex();
+
+			if (const auto world_model = get_entity_from_handle<sdk::CBaseWeaponWorldModel>(item->GetWeaponWorldModel())) {
+				world_model->GetModelIndex() = g_model_info->GetModelIndex(replacement_item->worldModel);
+				world_model->ValidateModelIndex();
 			}
 
 			item->GetClientNetworkable()->PreDataUpdate(0);
