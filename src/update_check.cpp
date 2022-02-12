@@ -228,7 +228,7 @@ auto run_update_check() -> void
 {
 	s_steam_http = GetISteamHTTP("STEAMHTTP_INTERFACE_VERSION002");
 
-	const auto handle = s_steam_http->CreateHTTPRequest(EHTTPMethod::GET, "http://api.github.com/repos/namazso/nSkinz/commits");
+	const auto handle = s_steam_http->CreateHTTPRequest(EHTTPMethod::GET, "http://api.github.com/repos/advancedfx/nSkinz/commits");
 
 	constexpr static auto build_time = std::integral_constant<time_t, time_t(cx::unix_time())>::value;
 
