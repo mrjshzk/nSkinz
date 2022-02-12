@@ -43,6 +43,8 @@ sdk::C_CS_PlayerResource** g_player_resource;
 //vmt_smart_hook*				g_client_hook;
 //vmt_smart_hook*				g_game_event_manager_hook;
 
+recv_prop_hook* g_modelindex_hook;
+recv_prop_hook* g_weapon_hook;
 recv_prop_hook* g_sequence_hook;
 
 auto ensure_dynamic_hooks() -> void
@@ -127,6 +129,12 @@ auto initialize(void* instance) -> void
 
 	//g_game_event_manager_hook = new vmt_smart_hook(g_game_event_manager);
 	//g_game_event_manager_hook->apply_hook<hooks::FireEventClientSide>(9);
+
+	const auto modelindex_prop = sdk::C_BaseViewModel::GetModelIndexProp();
+	g_modelindex_hook = new recv_prop_hook(modelindex_prop, &hooks::modelindex_proxy_fn);
+
+	const auto weapon_prop = sdk::C_BaseViewModel::GetWeaponProp();
+	g_weapon_hook = new recv_prop_hook(weapon_prop, &hooks::weapon_proxy_fn);
 
 	const auto sequence_prop = sdk::C_BaseViewModel::GetSequenceProp();
 	g_sequence_hook = new recv_prop_hook(sequence_prop, &hooks::sequence_proxy_fn);

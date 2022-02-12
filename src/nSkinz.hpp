@@ -39,3 +39,5 @@ auto ensure_dynamic_hooks() -> void;
 auto get_client_name() -> const char*;
 
 extern recv_prop_hook* g_sequence_hook;
+extern recv_prop_hook* g_modelindex_hook;
+extern recv_prop_hook* g_weapon_hook;

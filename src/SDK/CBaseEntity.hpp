@@ -77,8 +77,10 @@ namespace sdk
 	class C_BaseViewModel : public C_BaseAnimating
 	{
 	public:
-		NETVAR(GetOwner, "CBaseViewModel", "m_hOwner", CBaseHandle);
 		NETVAR(GetWeapon, "CBaseViewModel", "m_hWeapon", CBaseHandle);
+		NETVAR(GetOwner, "CBaseViewModel", "m_hOwner", CBaseHandle);
+		NETPROP(GetModelIndexProp, "CBaseViewModel", "m_nModelIndex");
+		NETPROP(GetWeaponProp, "CBaseViewModel", "m_hWeapon");
 		NETPROP(GetSequenceProp, "CBaseViewModel", "m_nSequence");
 	};
 

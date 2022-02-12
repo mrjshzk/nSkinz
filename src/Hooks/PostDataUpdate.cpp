@@ -27,8 +27,9 @@
 #include "../nSkinz.hpp"
 #include "../config.hpp"
 #include "../sticker_changer.hpp"
+#include "../SDK//declarations.hpp"
 
-static auto erase_override_if_exists_by_index(const uint64_t xuid, const int definition_index) -> void
+void erase_override_if_exists_by_index(const uint64_t xuid, const int definition_index)
 {
 	// We have info about the item not needed to be overridden
 	if(const auto original_item = game_data::get_weapon_info(definition_index))
@@ -58,8 +59,8 @@ static auto erase_override_if_exists_by_index(const uint64_t xuid, const int def
 	}
 }
 
-static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item, const item_setting* config,
-	const uint64_t xuid, const unsigned xuid_low) -> void
+void apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item, item_setting* config,
+	const uint64_t xuid, const unsigned xuid_low)
 {
 	item->GetInitialized() = true;
 
@@ -82,7 +83,7 @@ static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item,
 	if (config->seed)
 		item->GetFallbackSeed() = config->seed;
 
-	if (config->stat_trak)
+	//if (config->stat_trak)
 		item->GetFallbackStatTrak() = config->stat_trak;
 
 	item->GetFallbackWear() = config->wear;
@@ -98,6 +99,7 @@ static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item,
 		if (const auto replacement_item = game_data::get_weapon_info(config->definition_override_index))
 		{
 			const int old_definition_index = definition_index;
+			config->org_definition_index = old_definition_index;
 
 			// We didn't override 0, but some actual weapon, that we have data for
 			if (old_definition_index)
@@ -111,7 +113,7 @@ static auto apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item,
 
 			definition_index = short(config->definition_override_index);
 
-			item->GetModelIndex() = g_model_info->GetModelIndex(replacement_item->worldModel);
+			item->GetModelIndex() = g_model_info->GetModelIndex(replacement_item->viewModel);
 			item->ValidateModelIndex();
 
 			if (const auto world_model = get_entity_from_handle<sdk::CBaseWeaponWorldModel>(item->GetWeaponWorldModel())) {
@@ -166,6 +168,16 @@ static auto make_glove(int entry, int serial) -> sdk::C_BaseAttributableItem*
 	}*/
 
 	return glove;
+}
+
+std::map<int, sdk::CBaseHandle> g_PlayerToHandle;
+std::map<int, fnv::hash> g_PlayerToViewModelHash;
+
+bool GetPlayerIndexToViewModelHash(int index, fnv::hash & hash) {
+	auto it = g_PlayerToViewModelHash.find(index);
+	if (it == g_PlayerToViewModelHash.end()) return false;
+	hash = it->second;
+	return true;
 }
 
 void post_data_update_end(sdk::C_BasePlayer* local)
@@ -270,23 +282,28 @@ void post_data_update_end(sdk::C_BasePlayer* local)
 				erase_override_if_exists_by_index(player_info.xuid, definition_index);
 		}
 	}
-
+	/*
 	const auto view_model = get_entity_from_handle<sdk::C_BaseViewModel>(local->GetViewModel());
-
 	if (view_model) {
 
 		const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(view_model->GetWeapon());
 
 		if (view_model_weapon) {
 
-			const auto override_info = game_data::get_weapon_info(view_model_weapon->GetItemDefinitionIndex());
+			auto& definition_index = view_model_weapon->GetItemDefinitionIndex();
+			const auto active_conf = g_config.get_by_definition_index(player_info.userid, is_knife(definition_index) ? WEAPON_KNIFE : definition_index);
+			// All knives are terrorist knives.
+			if (active_conf && active_conf->definition_override_index) {
 
-			if (override_info) {
-				const auto override_model_index = g_model_info->GetModelIndex(override_info->viewModel);
-				view_model->GetModelIndex() = override_model_index;
+				const auto override_info = game_data::get_weapon_info(active_conf->definition_override_index);
+
+				if (override_info) {
+					const auto override_model_index = g_model_info->GetModelIndex(override_info->viewModel);
+					view_model->GetModelIndex() = override_model_index;
+				}
 			}
 		}
 
 		view_model->ValidateModelIndex();
-	}
+	}*/
 }
