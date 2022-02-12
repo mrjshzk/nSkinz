@@ -163,7 +163,6 @@ struct item_setting
 	int paint_kit_index = 0;
 	int definition_override_vector_index = 0;
 	int definition_override_index = 0;
-	int org_definition_index = 0;
 	int seed = 0;
 	int stat_trak = 0;
 	float wear = std::numeric_limits<float>::min();

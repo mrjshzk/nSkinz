@@ -41,6 +41,13 @@ namespace hooks
 		static Fn* m_original;
 	};
 
+	struct C_BaseAttributableItem_UpdateOnRemove
+	{
+		using Fn = void __fastcall(sdk::C_BaseAttributableItem* thisptr, void*);
+		static Fn hooked;
+		static Fn* m_original;
+	};
+
 	// NetVar Proxies
 
 	extern auto __cdecl modelindex_proxy_fn(const sdk::CRecvProxyData* proxy_data_const, void* entity, void* output) -> void;

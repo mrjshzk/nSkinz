@@ -521,6 +521,8 @@ private:
 	std::map<int, std::map<Activity_e,std::map<int,int>>> m_ActivitySequences;
 } g_SequenceMap;
 
+extern std::map<sdk::C_BaseAttributableItem*, int> g_weapon_to_orgindex;
+
 static auto do_sequence_remapping(sdk::CRecvProxyData* data, sdk::C_BaseViewModel* entity) -> void
 {
 	const auto owner = get_entity_from_handle<sdk::C_BasePlayer>(entity->GetOwner());
@@ -552,7 +554,11 @@ static auto do_sequence_remapping(sdk::CRecvProxyData* data, sdk::C_BaseViewMode
 		return;
 
 	auto& sequence = data->m_Value.m_Int;
-	sequence = g_SequenceMap.MapSequence(active_conf->org_definition_index, sequence, active_conf->definition_override_index);
+	int orgIndex = definition_index;
+	auto it = g_weapon_to_orgindex.find(view_model_weapon);
+	if (it != g_weapon_to_orgindex.end())
+		orgIndex = it->second;
+	sequence = g_SequenceMap.MapSequence(orgIndex, sequence, active_conf->definition_override_index);
 }
 
 // Replacement function that will be called when the view model animation sequence changes.
@@ -575,10 +581,7 @@ auto __cdecl hooks::sequence_proxy_fn(const sdk::CRecvProxyData* proxy_data_cons
 	original_fn(proxy_data_const, entity, output);
 }
 
-void post_data_update_end(sdk::C_BasePlayer* local);
-void erase_override_if_exists_by_index(const uint64_t xuid, const int definition_index);
-void apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item, item_setting* config,
-	const uint64_t xuid, const unsigned xuid_low);
+bool get_fixup_view_model_index(sdk::C_BaseViewModel* view_model, int& outNewIndex, int& outOrgIndex);
 
 
 bool g_modelindex_called = false;
@@ -607,30 +610,10 @@ auto __cdecl hooks::weapon_proxy_fn(const sdk::CRecvProxyData* proxy_data_const,
 		sdk::CRecvProxyData data;
 		data.m_Value.m_Int = g_modelindex_value;
 
-		const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(view_model->GetWeapon());
-
-		if (view_model_weapon) {
-			const auto owner = get_entity_from_handle<sdk::C_BasePlayer>(view_model->GetOwner());
-			if (owner && owner->IsPlayer() && static_cast<sdk::C_BasePlayer*>(owner)->GetLifeState() == sdk::LifeState::ALIVE) {
-				sdk::player_info_t player_info;
-				if (g_engine->GetPlayerInfo(owner->GetIndex(), &player_info)) {
-
-					auto& definition_index = view_model_weapon->GetItemDefinitionIndex();
-					// All knives are terrorist knives.
-					const auto active_conf = g_config.get_by_definition_index(player_info.userid, is_knife(definition_index) ? WEAPON_KNIFE : definition_index);
-					if (active_conf && active_conf->definition_override_index) {
-						if(active_conf->definition_override_index != definition_index)
-							active_conf->org_definition_index = definition_index;
-						view_model_weapon->GetItemDefinitionIndex() = active_conf->definition_override_index;
-						const auto override_info = game_data::get_weapon_info(active_conf->definition_override_index);
-						if (override_info) {
-							const auto override_model_index = g_model_info->GetModelIndex(override_info->viewModel);
-							data.m_Value.m_Int = override_model_index;
-						}
-					}
-				}
-			}
-		}
+		int oldIndex;
+		int newIndex;
+		if (get_fixup_view_model_index(view_model, newIndex, oldIndex))
+			data.m_Value.m_Int = newIndex;
 
 		// Fake in model index call as good as we can (good enough I guess):
 		g_modelindex_hook->get_original_function()(&data, view_model, &(view_model->GetModelIndex()));
