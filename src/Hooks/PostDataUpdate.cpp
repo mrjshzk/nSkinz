@@ -102,8 +102,8 @@ void apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item, item_s
 	if (config->seed)
 		item->GetFallbackSeed() = config->seed;
 
-	//if (config->stat_trak)
-		item->GetFallbackStatTrak() = config->stat_trak;
+	if (config->stat_trak)
+		item->GetFallbackStatTrak() = (unsigned int)config->stat_trak;
 
 	item->GetFallbackWear() = config->wear;
 
