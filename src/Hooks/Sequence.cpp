@@ -482,7 +482,7 @@ public:
 			return sequence;
 
 		auto it = m_SequenceMap.find(org_definition_index);
-		if (it != m_SequenceMap.end()) it = m_SequenceMap.find(WEAPON_KNIFE); // use default knife as fallback.
+		if (it == m_SequenceMap.end()) it = m_SequenceMap.find(WEAPON_KNIFE); // use default knife as fallback.
 		if (it != m_SequenceMap.end()) {
 			if (0 <= sequence && it->second.size() > (size_t)sequence) {
 				Activity_e activity = it->second[sequence].m_Activity;
