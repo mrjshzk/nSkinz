@@ -523,62 +523,61 @@ private:
 
 extern std::map<sdk::C_BaseAttributableItem*, int> g_weapon_to_orgindex;
 
-static auto do_sequence_remapping(sdk::CRecvProxyData* data, sdk::C_BaseViewModel* entity) -> void
+static auto do_sequence_remapping(sdk::C_BaseViewModel* entity, int nSequence) -> int
 {
 	const auto owner = get_entity_from_handle<sdk::C_BasePlayer>(entity->GetOwner());
 
 	if (!(owner && owner->IsPlayer() && static_cast<sdk::C_BasePlayer*>(owner)->GetLifeState() == sdk::LifeState::ALIVE))
-		return;
+		return nSequence;
 
 	const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(entity->GetWeapon());
 
 	if(!view_model_weapon)
-		return;
+		return nSequence;
 
 	const auto weapon_info = game_data::get_weapon_info(view_model_weapon->GetItemDefinitionIndex());
 
 	if(!weapon_info)
-		return;
+		return nSequence;
 
 	const auto definition_index = view_model_weapon->GetItemDefinitionIndex();
 
 	if (!is_knife(definition_index))
-		return;
+		return nSequence;
 
 	sdk::player_info_t player_info;
 	if (!g_engine->GetPlayerInfo(owner->GetIndex(), &player_info))
-		return;
+		return nSequence;
 
 	const auto active_conf = g_config.get_by_definition_index(player_info.userid, WEAPON_KNIFE);
 	if (nullptr == active_conf || 0 == active_conf->definition_override_index)
-		return;
+		return nSequence;
 
-	auto& sequence = data->m_Value.m_Int;
 	int orgIndex = definition_index;
 	auto it = g_weapon_to_orgindex.find(view_model_weapon);
 	if (it != g_weapon_to_orgindex.end())
 		orgIndex = it->second;
-	sequence = g_SequenceMap.MapSequence(orgIndex, sequence, active_conf->definition_override_index);
+	return g_SequenceMap.MapSequence(orgIndex, nSequence, active_conf->definition_override_index);
 }
 
-// Replacement function that will be called when the view model animation sequence changes.
-auto __cdecl hooks::sequence_proxy_fn(const sdk::CRecvProxyData* proxy_data_const, void* entity, void* output) -> void
+
+static std::map<void*,vmt_multi_hook *> C_BaseViewModel_SetSequence_hooks;
+
+auto __fastcall hooks::C_BaseViewModel_SetSequence::hooked(sdk::C_BaseViewModel* This, void* Edx, int nSequence) -> void
 {
-	const auto view_model = static_cast<sdk::C_BaseViewModel*>(entity);
+	auto &pHook = C_BaseViewModel_SetSequence_hooks[*(void**)This];
+	pHook->get_original_function<void (__fastcall *)(sdk::C_BaseViewModel*, void*, int)>(219)(This, Edx, do_sequence_remapping(This, nSequence));
+}
 
-	// Ensure our other dynamic object hooks are in place.
-	// Must do this from a game thread.
-	ensure_dynamic_hooks();
+void hook_C_BaseViewModel_SetSequence(sdk::C_BaseViewModel* thisptr) {
 
-	static auto original_fn = g_sequence_hook->get_original_function();
+	if (C_BaseViewModel_SetSequence_hooks.contains(*(void**)thisptr)) return;
 
-	// Remove the constness from the proxy data allowing us to make changes.
-	const auto proxy_data = const_cast<sdk::CRecvProxyData*>(proxy_data_const);
-
-	do_sequence_remapping(proxy_data, view_model);
-
-	// Call the original function with our edited data.
-	original_fn(proxy_data_const, entity, output);
+	vmt_multi_hook* pHook = new vmt_multi_hook();
+	if (pHook->initialize_and_hook_instance(thisptr)) {
+		pHook->hook_function(&hooks::C_BaseViewModel_SetSequence::hooked, 219);
+		C_BaseViewModel_SetSequence_hooks[*(void**)thisptr] = pHook;
+	}
 }
 
 bool get_fixup_view_model_index(sdk::C_BaseViewModel* view_model, int& outNewIndex, int& outOrgIndex);
@@ -601,6 +600,8 @@ auto __cdecl hooks::weapon_proxy_fn(const sdk::CRecvProxyData* proxy_data_const,
 	const auto view_model = static_cast<sdk::C_BaseViewModel*>(entity);
 
 	ensure_dynamic_hooks();
+	hook_C_BaseViewModel_SetSequence(view_model);
+
 	static auto original_fn = g_weapon_hook->get_original_function();
 
 	original_fn(proxy_data_const, entity, output);

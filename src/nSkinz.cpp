@@ -136,9 +136,6 @@ auto initialize(void* instance) -> void
 	const auto weapon_prop = sdk::C_BaseViewModel::GetWeaponProp();
 	g_weapon_hook = new recv_prop_hook(weapon_prop, &hooks::weapon_proxy_fn);
 
-	const auto sequence_prop = sdk::C_BaseViewModel::GetSequenceProp();
-	g_sequence_hook = new recv_prop_hook(sequence_prop, &hooks::sequence_proxy_fn);
-
 	const auto team_arr_prop = sdk::C_CS_PlayerResource::GetTeamProp();
 	const auto team_prop = team_arr_prop->m_pDataTable->m_pProps;
 	const auto proxy_addr = std::uintptr_t(team_prop->m_ProxyFn);

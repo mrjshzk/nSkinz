@@ -63,16 +63,17 @@ std::map<sdk::C_BaseAttributableItem*, int> g_weapon_to_orgindex;
 
 hooks::C_BaseAttributableItem_UpdateOnRemove::Fn* hooks::C_BaseAttributableItem_UpdateOnRemove::m_original;
 
-auto __fastcall hooks::C_BaseAttributableItem_UpdateOnRemove::hooked(sdk::C_BaseAttributableItem* thisptr, void*) -> void
+auto __fastcall hooks::C_BaseAttributableItem_UpdateOnRemove::hooked(sdk::C_BaseAttributableItem* This, void* Edx) -> void
 {
-	g_weapon_to_orgindex.erase(thisptr);
+	g_weapon_to_orgindex.erase(This);
+	hooks::C_BaseAttributableItem_UpdateOnRemove::m_original(This, Edx);
 }
 
 void hook_weapon_update_on_remove(sdk::C_BaseAttributableItem* thisptr) {
 	static bool firstRun = true;
 	if (firstRun) {
 		firstRun = false;
-		vmt_multi_hook weapon_update_on_remove_hook;
+		static vmt_multi_hook weapon_update_on_remove_hook;
 		if (weapon_update_on_remove_hook.initialize_and_hook_instance(thisptr))
 			weapon_update_on_remove_hook.apply_hook<hooks::C_BaseAttributableItem_UpdateOnRemove>(127);
 	}
