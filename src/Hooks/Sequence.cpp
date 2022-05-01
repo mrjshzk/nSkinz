@@ -563,10 +563,18 @@ static auto do_sequence_remapping(sdk::C_BaseViewModel* entity, int nSequence) -
 
 static std::map<void*,vmt_multi_hook *> C_BaseViewModel_SetSequence_hooks;
 
+void * g_setsequence_called = nullptr;
+sdk::C_BaseViewModel* g_setsequence_This = nullptr;
+int g_setsequence_value = 0;
+
 auto __fastcall hooks::C_BaseViewModel_SetSequence::hooked(sdk::C_BaseViewModel* This, void* Edx, int nSequence) -> void
 {
 	auto &pHook = C_BaseViewModel_SetSequence_hooks[*(void**)This];
-	pHook->get_original_function<void (__fastcall *)(sdk::C_BaseViewModel*, void*, int)>(219)(This, Edx, do_sequence_remapping(This, nSequence));
+	g_setsequence_value = nSequence;
+	g_setsequence_This = This;
+	g_setsequence_called = pHook->get_original_function<void(__fastcall*)(sdk::C_BaseViewModel*, void*, int)>(219);
+	int newSequence = do_sequence_remapping(This, nSequence);
+	((void (__fastcall *)(sdk::C_BaseViewModel*, void*, int))g_setsequence_called)(This, Edx, newSequence);
 }
 
 void hook_C_BaseViewModel_SetSequence(sdk::C_BaseViewModel* thisptr) {
@@ -588,9 +596,6 @@ int g_modelindex_value = 0;
 
 auto __cdecl hooks::modelindex_proxy_fn(const sdk::CRecvProxyData* proxy_data_const, void* entity, void* output) -> void
 {
-	// The problem is that model index is set before we know the weapon handle, so we cache it off and fix it up after weapon handle is set,
-	// assuming that weapon handle changes when model index changes.
-
 	g_modelindex_called = true;
 	g_modelindex_value = proxy_data_const->m_Value.m_Int;
 }
@@ -619,4 +624,10 @@ auto __cdecl hooks::weapon_proxy_fn(const sdk::CRecvProxyData* proxy_data_const,
 		// Fake in model index call as good as we can (good enough I guess):
 		g_modelindex_hook->get_original_function()(&data, view_model, &(view_model->GetModelIndex()));
 	}
+
+	if (g_setsequence_called && g_setsequence_This == view_model) {
+		int newSequence = do_sequence_remapping(view_model, g_setsequence_value);
+		((void(__fastcall*)(sdk::C_BaseViewModel*, void*, int))g_setsequence_called)(g_setsequence_This, 0, newSequence);
+	}
+	g_setsequence_called = nullptr;
 }
