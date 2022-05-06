@@ -185,7 +185,9 @@ public:
 	auto save() -> void;
 	auto load() -> void;
 
-	auto get_by_definition_index(int user_id, int definition_index) -> item_setting*;
+	auto get_from_xuid_by_definition_index(int xuid_lo, int xuid_hi, const int definition_index)->item_setting*;
+
+	auto get_by_definition_index(int user_id, int definition_index)->item_setting*;
 
 	auto get_items() -> std::vector<item_setting>&
 	{

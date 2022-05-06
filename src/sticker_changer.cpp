@@ -69,7 +69,7 @@ struct GetStickerAttributeBySlotIndexFloat
 
 		const auto defindex = item->GetItemDefinitionIndex();
 
-		auto config = g_config.get_by_definition_index(GetUserIdFromItem(item), defindex);
+		auto config = g_config.get_from_xuid_by_definition_index(item->GetOriginalOwnerXuidLow(), item->GetOriginalOwnerXuidHigh(), defindex);
 
 		if(config)
 		{
@@ -105,7 +105,7 @@ struct GetStickerAttributeBySlotIndexInt
 		{
 			const auto defindex = item->GetItemDefinitionIndex();
 
-			auto config = g_config.get_by_definition_index(GetUserIdFromItem(item), defindex);
+			auto config = g_config.get_from_xuid_by_definition_index(item->GetOriginalOwnerXuidLow(), item->GetOriginalOwnerXuidHigh(), defindex);
 
 			if(config)
 				return config->stickers.at(slot).kit;

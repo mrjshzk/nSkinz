@@ -76,6 +76,8 @@ namespace sdk
 		NETVAR(GetFallbackWear, "CBaseAttributableItem", "m_flFallbackWear", float);
 		NETVAR(GetFallbackStatTrak, "CBaseAttributableItem", "m_nFallbackStatTrak", unsigned);
 		NETVAR(GetInitialized, "CBaseAttributableItem", "m_bInitialized", bool);
+		NETVAR(GetOriginalOwnerXuidHigh, "CEconEntity", "m_OriginalOwnerXuidLow", int); // we messed Low and High up, so there's that.
+		NETVAR(GetOriginalOwnerXuidLow, "CEconEntity", "m_OriginalOwnerXuidHigh", int);
 
 		void GiveToPlayer(C_BaseCombatCharacter* pPlayer) {
 			// References string "[Wearables (%s)(%d)] Giving wearable to player %s(%d)\";

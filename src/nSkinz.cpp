@@ -78,8 +78,6 @@ auto get_client_name() -> const char*
 }
 
 void On_FRAME_NET_UPDATE_POSTDATAUPDATE_START(sdk::C_BasePlayer* local);
-void On_FRAME_RENDER_START(sdk::C_BaseEntity* ent);
-void On_FRAME_RENDER_END(sdk::C_BaseEntity* ent);
 
 hooks::IBaseClientDLL_FrameStageNotify::Fn* hooks::IBaseClientDLL_FrameStageNotify::m_original;
 
@@ -101,25 +99,6 @@ auto __fastcall hooks::IBaseClientDLL_FrameStageNotify::hooked(sdk::IBaseClientD
 				}
 			}
 		}
-		m_original(thisptr, nullptr, curStage);
-	} break;
-	case sdk::FRAME_RENDER_START:
-	{
-		/*
-		for (int idx = 0; idx <= g_entity_list->GetMaxEntities(); ++idx)
-		{
-			if (auto ent = g_entity_list->GetClientEntity(idx)) {
-				if (auto bent = ent->GetBaseEntity()) {
-					const char* className = bent->GetClassname();
-					if (0 == strcmp("predicted_viewmodel", className)) {
-						const auto view_model = static_cast<sdk::C_BaseViewModel*>(bent);
-						if (view_model) {
-							view_model->ValidateModelIndex();
-						}
-					}
-				}
-			}
-		}*/
 		m_original(thisptr, nullptr, curStage);
 	} break;
 	default:

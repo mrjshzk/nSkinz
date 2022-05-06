@@ -139,10 +139,15 @@ auto config::get_by_definition_index(const int user_id, const int definition_ind
 	xuid_lo = (int)(uint32_t)(xuid >> 32);
 	xuid_hi = (int)(uint32_t)(xuid >> 0);
 
-	auto it = std::find_if(m_items.begin(), m_items.end(), [definition_index,xuid_lo,xuid_hi](const item_setting& e)
-	{
-		return e.enabled && e.definition_index == definition_index && e.xuid_lo == xuid_lo && e.xuid_hi == xuid_hi;
-	});
+	return config::get_from_xuid_by_definition_index(xuid_lo, xuid_hi, definition_index);
+}
+
+auto config::get_from_xuid_by_definition_index(int xuid_lo, int xuid_hi, int definition_index) -> item_setting*
+{
+	auto it = std::find_if(m_items.begin(), m_items.end(), [definition_index, xuid_lo, xuid_hi](const item_setting& e)
+		{
+			return e.enabled && e.definition_index == definition_index && e.xuid_lo == xuid_lo && e.xuid_hi == xuid_hi;
+		});
 
 	return it == m_items.end() ? nullptr : &*it;
 }

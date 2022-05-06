@@ -26,13 +26,13 @@
       <Filter>Hooks</Filter>
     </ClCompile>
     <ClCompile Include="deps\imgui\imgui.cpp">
-      <Filter>Dependency\imgui</Filter>
+      <Filter>Dependency</Filter>
     </ClCompile>
     <ClCompile Include="deps\imgui\imgui_draw.cpp">
-      <Filter>Dependency\imgui</Filter>
+      <Filter>Dependency</Filter>
     </ClCompile>
     <ClCompile Include="src\Imgui_impl_dx9\imgui_impl_dx9.cpp">
-      <Filter>Dependency\imgui</Filter>
+      <Filter>Dependency</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -127,9 +127,6 @@
     </Filter>
     <Filter Include="Utilities">
       <UniqueIdentifier>{220d34fa-499b-4bce-9e4f-493421f1b61d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Dependency\imgui">
-      <UniqueIdentifier>{ea20e79e-732b-4f56-b6f3-7c9f42fa8721}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
