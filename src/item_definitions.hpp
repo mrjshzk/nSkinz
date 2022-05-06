@@ -105,7 +105,7 @@ enum ItemDefinitionIndex : int
 
 static inline auto is_knife(const int i) -> bool
 {
-	return (i >= WEAPON_KNIFE_BAYONET && i < GLOVE_STUDDED_BLOODHOUND) || i == WEAPON_KNIFE_T || i == WEAPON_KNIFE;
+	return (i >= WEAPON_KNIFE_BAYONET && i <= WEAPON_KNIFE_SKELETON) || i == WEAPON_KNIFE_T || i == WEAPON_KNIFE;
 }
 
 //extern const std::map<size_t, weapon_info> k_weapon_info;

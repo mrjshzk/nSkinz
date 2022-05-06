@@ -503,6 +503,7 @@ public:
 								rand -= itMap->second;
 								newSequence = itMap->first;
 								++itMap;
+								//break;
 							} while (0 < rand);
 							return newSequence;
 						}
@@ -523,111 +524,69 @@ private:
 
 extern std::map<sdk::C_BaseAttributableItem*, int> g_weapon_to_orgindex;
 
-static auto do_sequence_remapping(sdk::C_BaseViewModel* entity, int nSequence) -> int
+int do_sequence_remapping(int org_definition_index, int nSequence, int definition_override_index)
 {
-	const auto owner = get_entity_from_handle<sdk::C_BasePlayer>(entity->GetOwner());
-
-	if (!(owner && owner->IsPlayer() && static_cast<sdk::C_BasePlayer*>(owner)->GetLifeState() == sdk::LifeState::ALIVE))
-		return nSequence;
-
-	const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(entity->GetWeapon());
-
-	if(!view_model_weapon)
-		return nSequence;
-
-	const auto weapon_info = game_data::get_weapon_info(view_model_weapon->GetItemDefinitionIndex());
-
-	if(!weapon_info)
-		return nSequence;
-
-	const auto definition_index = view_model_weapon->GetItemDefinitionIndex();
-
-	if (!is_knife(definition_index))
-		return nSequence;
-
-	sdk::player_info_t player_info;
-	if (!g_engine->GetPlayerInfo(owner->GetIndex(), &player_info))
-		return nSequence;
-
-	const auto active_conf = g_config.get_by_definition_index(player_info.userid, WEAPON_KNIFE);
-	if (nullptr == active_conf || 0 == active_conf->definition_override_index)
-		return nSequence;
-
-	int orgIndex = definition_index;
-	auto it = g_weapon_to_orgindex.find(view_model_weapon);
-	if (it != g_weapon_to_orgindex.end())
-		orgIndex = it->second;
-	return g_SequenceMap.MapSequence(orgIndex, nSequence, active_conf->definition_override_index);
+	return g_SequenceMap.MapSequence(org_definition_index, nSequence, definition_override_index);
 }
 
 
-static std::map<void*,vmt_multi_hook *> C_BaseViewModel_SetSequence_hooks;
-
-void * g_setsequence_called = nullptr;
-sdk::C_BaseViewModel* g_setsequence_This = nullptr;
-int g_setsequence_value = 0;
+vmt_multi_hook* Get_ViewModel_Hook(sdk::C_BaseViewModel* This);
+void hook_weapon_update_on_remove(sdk::C_BaseAttributableItem* thisptr);
 
 auto __fastcall hooks::C_BaseViewModel_SetSequence::hooked(sdk::C_BaseViewModel* This, void* Edx, int nSequence) -> void
 {
-	auto &pHook = C_BaseViewModel_SetSequence_hooks[*(void**)This];
-	g_setsequence_value = nSequence;
-	g_setsequence_This = This;
-	g_setsequence_called = pHook->get_original_function<void(__fastcall*)(sdk::C_BaseViewModel*, void*, int)>(219);
-	int newSequence = do_sequence_remapping(This, nSequence);
-	((void (__fastcall *)(sdk::C_BaseViewModel*, void*, int))g_setsequence_called)(This, Edx, newSequence);
-}
-
-void hook_C_BaseViewModel_SetSequence(sdk::C_BaseViewModel* thisptr) {
-
-	if (C_BaseViewModel_SetSequence_hooks.contains(*(void**)thisptr)) return;
-
-	vmt_multi_hook* pHook = new vmt_multi_hook();
-	if (pHook->initialize_and_hook_instance(thisptr)) {
-		pHook->hook_function(&hooks::C_BaseViewModel_SetSequence::hooked, 219);
-		C_BaseViewModel_SetSequence_hooks[*(void**)thisptr] = pHook;
+	int newSequence = nSequence;
+	const auto owner = get_entity_from_handle<sdk::C_BasePlayer>(This->GetOwner());
+	if (owner && owner->IsPlayer()) {
+		const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(This->GetWeapon());
+		if (view_model_weapon) {
+			const auto weapon_info = game_data::get_weapon_info(view_model_weapon->GetItemDefinitionIndex());
+			if (weapon_info) {
+				const auto definition_index = view_model_weapon->GetItemDefinitionIndex();
+				if (is_knife(definition_index)) {
+					sdk::player_info_t player_info;
+					if (g_engine->GetPlayerInfo(owner->GetIndex(), &player_info)) {
+						const auto active_conf = g_config.get_by_definition_index(player_info.userid, WEAPON_KNIFE);
+						if (nullptr != active_conf && 0 != active_conf->definition_override_index) {
+							auto it = g_weapon_to_orgindex.find(view_model_weapon);
+							if (it != g_weapon_to_orgindex.end()) {
+								newSequence = do_sequence_remapping(it->second, nSequence, active_conf->definition_override_index);
+							}
+						}
+					}
+				}
+			}
+		}
 	}
+
+	auto pHook = Get_ViewModel_Hook(This);
+	pHook->get_original_function<void(__fastcall*)(sdk::C_BaseViewModel*, void*, int)>(219)(This, Edx, 0);
 }
 
-bool get_fixup_view_model_index(sdk::C_BaseViewModel* view_model, int& outNewIndex, int& outOrgIndex);
-
-
-bool g_modelindex_called = false;
-int g_modelindex_value = 0;
+void On_FRAME_RENDER_START(sdk::C_BaseEntity* ent);
+void On_FRAME_RENDER_END(sdk::C_BaseEntity* ent);
 
 auto __cdecl hooks::modelindex_proxy_fn(const sdk::CRecvProxyData* proxy_data_const, void* entity, void* output) -> void
 {
-	g_modelindex_called = true;
-	g_modelindex_value = proxy_data_const->m_Value.m_Int;
+	ensure_dynamic_hooks();
+	On_FRAME_RENDER_END(static_cast<sdk::C_BaseViewModel*>(entity));
+
+	static auto original_fn = g_modelindex_hook->get_original_function();
+	original_fn(proxy_data_const, entity, output);
 }
+
+void hook_viewmodel(sdk::C_BaseViewModel* thisptr);
 
 auto __cdecl hooks::weapon_proxy_fn(const sdk::CRecvProxyData* proxy_data_const, void* entity, void* output) -> void
 {
 	const auto view_model = static_cast<sdk::C_BaseViewModel*>(entity);
 
 	ensure_dynamic_hooks();
-	hook_C_BaseViewModel_SetSequence(view_model);
+	hook_viewmodel(view_model);
 
 	static auto original_fn = g_weapon_hook->get_original_function();
 
 	original_fn(proxy_data_const, entity, output);
-	
-	if (g_modelindex_called) {
-		g_modelindex_called = false;
-		sdk::CRecvProxyData data;
-		data.m_Value.m_Int = g_modelindex_value;
 
-		int oldIndex;
-		int newIndex;
-		if (get_fixup_view_model_index(view_model, newIndex, oldIndex))
-			data.m_Value.m_Int = newIndex;
-
-		// Fake in model index call as good as we can (good enough I guess):
-		g_modelindex_hook->get_original_function()(&data, view_model, &(view_model->GetModelIndex()));
-	}
-
-	if (g_setsequence_called && g_setsequence_This == view_model) {
-		int newSequence = do_sequence_remapping(view_model, g_setsequence_value);
-		((void(__fastcall*)(sdk::C_BaseViewModel*, void*, int))g_setsequence_called)(g_setsequence_This, 0, newSequence);
-	}
-	g_setsequence_called = nullptr;
+	On_FRAME_RENDER_START(view_model);
 }

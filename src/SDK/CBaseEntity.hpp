@@ -18,9 +18,17 @@ namespace sdk
 			get_vfunc<void(__thiscall*)(C_BaseEntity*)>(this, 54)(this);
 		}
 
+		char const* GetClassname() {
+			return get_vfunc<char const * (__thiscall*)(C_BaseEntity*)>(this, 143)(this);
+		}
+
 		bool IsPlayer(void) /* const */
 		{
 			return get_vfunc<bool(__thiscall *)(C_BaseEntity*)>(this, 158)(this);
+		}
+
+		C_BaseEntity* GetObserverTarget() {
+			return get_vfunc<C_BaseEntity*(__thiscall*)(C_BaseEntity*)>(this, 295)(this);
 		}
 	};
 
@@ -28,6 +36,7 @@ namespace sdk
 	{
 	public:
 		NETVAR(GetBody, "CBaseAnimating", "m_nBody", int);
+		NETVAR(GetSequence, "CBaseAnimating", "m_nSequence", int);
 	};
 
 	class C_BaseCombatCharacter : public C_BaseAnimating
@@ -81,6 +90,12 @@ namespace sdk
 		NETVAR(GetOwner, "CBaseViewModel", "m_hOwner", CBaseHandle);
 		NETPROP(GetModelIndexProp, "CBaseViewModel", "m_nModelIndex");
 		NETPROP(GetWeaponProp, "CBaseViewModel", "m_hWeapon");
+		//NETPROP(GetSequenceProp, "CBaseViewModel", "m_nSequence");
+
+		void SetSequence(int nSequence)
+		{
+			get_vfunc<void(__thiscall*)(C_BaseViewModel*,int)>(this, 219)(this,nSequence);
+		}
 	};
 
 	class C_PlayerResource

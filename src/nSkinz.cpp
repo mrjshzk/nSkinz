@@ -77,13 +77,16 @@ auto get_client_name() -> const char*
 	return name;
 }
 
-void post_data_update_end(sdk::C_BasePlayer* local);
+void On_FRAME_NET_UPDATE_POSTDATAUPDATE_START(sdk::C_BasePlayer* local);
+void On_FRAME_RENDER_START(sdk::C_BaseEntity* ent);
+void On_FRAME_RENDER_END(sdk::C_BaseEntity* ent);
 
 hooks::IBaseClientDLL_FrameStageNotify::Fn* hooks::IBaseClientDLL_FrameStageNotify::m_original;
 
 auto __fastcall hooks::IBaseClientDLL_FrameStageNotify::hooked(sdk::IBaseClientDLL* thisptr, void*, sdk::ClientFrameStage_t curStage) -> void
 {
-	if (curStage == sdk::FRAME_NET_UPDATE_POSTDATAUPDATE_START)
+	switch (curStage) {
+	case sdk::FRAME_NET_UPDATE_POSTDATAUPDATE_START:
 	{
 		for (int idx = 0; idx <= sdk::MAX_PLAYERS; ++idx)
 		{
@@ -93,14 +96,36 @@ auto __fastcall hooks::IBaseClientDLL_FrameStageNotify::hooked(sdk::IBaseClientD
 				{
 					if (bent->IsPlayer())
 					{
-						post_data_update_end(static_cast<sdk::C_BasePlayer*>(bent));
+						On_FRAME_NET_UPDATE_POSTDATAUPDATE_START(static_cast<sdk::C_BasePlayer*>(bent));
 					}
 				}
 			}
 		}
+		m_original(thisptr, nullptr, curStage);
+	} break;
+	case sdk::FRAME_RENDER_START:
+	{
+		/*
+		for (int idx = 0; idx <= g_entity_list->GetMaxEntities(); ++idx)
+		{
+			if (auto ent = g_entity_list->GetClientEntity(idx)) {
+				if (auto bent = ent->GetBaseEntity()) {
+					const char* className = bent->GetClassname();
+					if (0 == strcmp("predicted_viewmodel", className)) {
+						const auto view_model = static_cast<sdk::C_BaseViewModel*>(bent);
+						if (view_model) {
+							view_model->ValidateModelIndex();
+						}
+					}
+				}
+			}
+		}*/
+		m_original(thisptr, nullptr, curStage);
+	} break;
+	default:
+		m_original(thisptr, nullptr, curStage);
 	}
 
-	m_original(thisptr, nullptr, curStage);
 }
 
 auto initialize(void* instance) -> void

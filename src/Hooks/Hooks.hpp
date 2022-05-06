@@ -58,4 +58,5 @@ namespace hooks
 
 	extern auto __cdecl modelindex_proxy_fn(const sdk::CRecvProxyData* proxy_data_const, void* entity, void* output) -> void;
 	extern auto __cdecl weapon_proxy_fn(const sdk::CRecvProxyData* proxy_data_const, void* entity, void* output) -> void;
+	//extern auto __cdecl sequence_proxy_fn(const sdk::CRecvProxyData* proxy_data_const, void* entity, void* output) -> void;
 }
