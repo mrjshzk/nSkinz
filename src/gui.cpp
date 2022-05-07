@@ -263,7 +263,7 @@ void draw_gui()
 		ImGui::PopItemWidth();
 		ImGui::Columns(1);
 
-		ImGui::Text("nSkinz by namazso (advancedfx-v0.1.23)");
+		ImGui::Text("nSkinz by namazso (advancedfx-v0.1.24)");
 
 		ImGui::End();
 	}

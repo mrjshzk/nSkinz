@@ -534,6 +534,7 @@ void hook_weapon_update_on_remove(sdk::C_BaseAttributableItem* thisptr);
 vmt_multi_hook* Get_ViewModel_Hook(sdk::C_BaseViewModel* This);
 
 struct OrgModelData_s {
+	int LastModelIndex = -1;
 	int LastSequence = -1;
 	int LastNewSequence = -1;
 };
@@ -574,6 +575,9 @@ void MapSequence(sdk::C_BaseViewModel* view_model) {
 	auto& entry = g_weapon_to_org[view_model];
 	int lastSequence = entry.LastSequence;
 	entry.LastSequence = nSequence;
+	int newModelIndex = view_model->GetModelIndex();
+	int lastModelIndex = entry.LastModelIndex;
+	entry.LastModelIndex = newModelIndex;
 
 	const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(view_model->GetWeapon());
 	if (view_model_weapon) {
@@ -587,7 +591,7 @@ void MapSequence(sdk::C_BaseViewModel* view_model) {
 					auto it = g_weapon_to_orgindex.find(view_model_weapon);
 					if (it != g_weapon_to_orgindex.end()) {
 						
-						if (lastSequence != nSequence || entry.LastNewSequence == -1)
+						if (lastSequence != nSequence || entry.LastNewSequence == -1 || newModelIndex != lastModelIndex)
 							newSequence = do_sequence_remapping(it->second, nSequence, active_conf->definition_override_index);
 						else
 							newSequence = entry.LastNewSequence;

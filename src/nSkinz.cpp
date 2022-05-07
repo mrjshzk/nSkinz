@@ -102,10 +102,6 @@ auto __fastcall hooks::IBaseClientDLL_FrameStageNotify::hooked(sdk::IBaseClientD
 				}
 			}
 		}
-		m_original(thisptr, nullptr, curStage);
-	} break;
-	case sdk::FRAME_RENDER_START:
-	{
 		for (int idx = 0; idx <= g_entity_list->GetMaxEntities(); ++idx)
 		{
 			if (auto ent = g_entity_list->GetClientEntity(idx))
@@ -121,7 +117,7 @@ auto __fastcall hooks::IBaseClientDLL_FrameStageNotify::hooked(sdk::IBaseClientD
 		}
 		m_original(thisptr, nullptr, curStage);
 	} break;
-	case sdk::FRAME_RENDER_END:
+	case sdk::FRAME_NET_UPDATE_START:
 	{
 		for (int idx = 0; idx <= g_entity_list->GetMaxEntities(); ++idx)
 		{
