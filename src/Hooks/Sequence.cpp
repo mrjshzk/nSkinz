@@ -569,6 +569,12 @@ void hook_viewmodel(sdk::C_BaseViewModel* thisptr)
 void MapSequence(sdk::C_BaseViewModel* view_model) {
 	hook_viewmodel(view_model);
 
+	int nSequence = view_model->GetSequence();
+	int newSequence = nSequence;
+	auto& entry = g_weapon_to_org[view_model];
+	int lastSequence = entry.LastSequence;
+	entry.LastSequence = nSequence;
+
 	const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(view_model->GetWeapon());
 	if (view_model_weapon) {
 		const auto weapon_info = game_data::get_weapon_info(view_model_weapon->GetItemDefinitionIndex());
@@ -580,25 +586,19 @@ void MapSequence(sdk::C_BaseViewModel* view_model) {
 				if (nullptr != active_conf && 0 != active_conf->definition_override_index) {
 					auto it = g_weapon_to_orgindex.find(view_model_weapon);
 					if (it != g_weapon_to_orgindex.end()) {
-						int newSequence;
-						int nSequence = view_model->GetSequence();
-
-						auto& entry = g_weapon_to_org[view_model];
-
-						int lastSequence = entry.LastSequence;
-						entry.LastSequence = nSequence;
+						
 						if (lastSequence != nSequence || entry.LastNewSequence == -1)
 							newSequence = do_sequence_remapping(it->second, nSequence, active_conf->definition_override_index);
 						else
 							newSequence = entry.LastNewSequence;
 
 						entry.LastNewSequence = newSequence;
-						view_model->GetSequence() = newSequence;
 					}
 				}
 			}
 		}
 	}
+	view_model->GetSequence() = newSequence;
 }
 
 void UnmapSequence(sdk::C_BaseViewModel* view_model) {

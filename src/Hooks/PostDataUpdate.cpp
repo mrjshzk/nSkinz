@@ -343,4 +343,6 @@ void On_FRAME_NET_UPDATE_POSTDATAUPDATE_START(sdk::C_BasePlayer* local)
 			}
 		}
 	}
+
+	view_model->ValidateModelIndex();
 }
