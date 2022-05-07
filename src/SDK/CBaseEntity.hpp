@@ -90,14 +90,14 @@ namespace sdk
 	public:
 		NETVAR(GetWeapon, "CBaseViewModel", "m_hWeapon", CBaseHandle);
 		NETVAR(GetOwner, "CBaseViewModel", "m_hOwner", CBaseHandle);
-		NETPROP(GetModelIndexProp, "CBaseViewModel", "m_nModelIndex");
-		NETPROP(GetWeaponProp, "CBaseViewModel", "m_hWeapon");
+		//NETPROP(GetModelIndexProp, "CBaseViewModel", "m_nModelIndex");
+		//NETPROP(GetWeaponProp, "CBaseViewModel", "m_hWeapon");
 		//NETPROP(GetSequenceProp, "CBaseViewModel", "m_nSequence");
 
-		void SetSequence(int nSequence)
-		{
-			get_vfunc<void(__thiscall*)(C_BaseViewModel*,int)>(this, 219)(this,nSequence);
-		}
+		//void SetSequence(int nSequence)
+		//{
+		//	get_vfunc<void(__thiscall*)(C_BaseViewModel*,int)>(this, 219)(this,nSequence);
+		//}
 	};
 
 	class C_PlayerResource

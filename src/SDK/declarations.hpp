@@ -42,6 +42,15 @@ namespace sdk
 	using RecvVarProxyFn = void(__cdecl *)(const CRecvProxyData*, void*, void*);
 	using Vector = std::array<float, 3>;
 
+
+	constexpr static auto MAX_EDICT_BITS = 11;
+
+	constexpr static auto NUM_NETWORKED_EHANDLE_SERIAL_NUMBER_BITS = 10;
+	constexpr static auto NUM_NETWORKED_EHANDLE_BITS = MAX_EDICT_BITS + NUM_NETWORKED_EHANDLE_SERIAL_NUMBER_BITS;
+	constexpr static auto INVALID_NETWORKED_EHANDLE_VALUE = (1 << NUM_NETWORKED_EHANDLE_BITS) - 1;
+
+	constexpr static auto NUM_SERIAL_NUM_BITS = 16; // (32 - NUM_ENT_ENTRY_BITS)
+	constexpr static auto NUM_SERIAL_NUM_SHIFT_BITS = 32 - NUM_SERIAL_NUM_BITS;
 	constexpr static auto INVALID_EHANDLE_INDEX = 0xFFFFFFFF;
 	constexpr static auto MAX_PLAYER_NAME_LENGTH = 128;
 	constexpr static auto SIGNED_GUID_LEN = 32;

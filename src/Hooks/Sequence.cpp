@@ -530,13 +530,46 @@ int do_sequence_remapping(int org_definition_index, int nSequence, int definitio
 }
 
 
-vmt_multi_hook* Get_ViewModel_Hook(sdk::C_BaseViewModel* This);
 void hook_weapon_update_on_remove(sdk::C_BaseAttributableItem* thisptr);
+vmt_multi_hook* Get_ViewModel_Hook(sdk::C_BaseViewModel* This);
 
-auto __fastcall hooks::C_BaseViewModel_SetSequence::hooked(sdk::C_BaseViewModel* This, void* Edx, int nSequence) -> void
+struct OrgModelData_s {
+	int LastSequence = -1;
+	int LastNewSequence = -1;
+};
+
+std::map<sdk::C_BaseEntity*, OrgModelData_s> g_weapon_to_org;
+static std::map<void*, vmt_multi_hook*> C_BaseEntity_UpdateOnRemove_hooks;
+
+vmt_multi_hook* Get_ViewModel_Hook(sdk::C_BaseViewModel* This) {
+	return C_BaseEntity_UpdateOnRemove_hooks[*(void**)This];
+}
+
+void __fastcall C_BaseEntity_UpdateOnRemove_Hook(sdk::C_BaseViewModel* This, void* Edx)
 {
-	int newSequence = nSequence;
-	const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(This->GetWeapon());
+	g_weapon_to_org.erase(This);
+	auto pHook = Get_ViewModel_Hook(This);
+	auto org_fn = pHook->get_original_function<void(__fastcall*)(sdk::C_BaseEntity*, void*)>(127);
+	org_fn(This, Edx);
+}
+
+void hook_viewmodel(sdk::C_BaseViewModel* thisptr)
+{
+	if (C_BaseEntity_UpdateOnRemove_hooks.contains(*(void**)thisptr)) return;
+
+	vmt_multi_hook* pHook = new vmt_multi_hook();
+	if (pHook->initialize_and_hook_instance(thisptr)) {
+		pHook->hook_function(C_BaseEntity_UpdateOnRemove_Hook, 127);
+		//pHook->hook_function(&hooks::C_BaseViewModel_SetSequence::hooked, 219);
+		C_BaseEntity_UpdateOnRemove_hooks[*(void**)thisptr] = pHook;
+	}
+}
+
+
+void MapSequence(sdk::C_BaseViewModel* view_model) {
+	hook_viewmodel(view_model);
+
+	const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(view_model->GetWeapon());
 	if (view_model_weapon) {
 		const auto weapon_info = game_data::get_weapon_info(view_model_weapon->GetItemDefinitionIndex());
 		if (weapon_info) {
@@ -547,41 +580,30 @@ auto __fastcall hooks::C_BaseViewModel_SetSequence::hooked(sdk::C_BaseViewModel*
 				if (nullptr != active_conf && 0 != active_conf->definition_override_index) {
 					auto it = g_weapon_to_orgindex.find(view_model_weapon);
 					if (it != g_weapon_to_orgindex.end()) {
-						newSequence = do_sequence_remapping(it->second, nSequence, active_conf->definition_override_index);
+						int newSequence;
+						int nSequence = view_model->GetSequence();
+
+						auto& entry = g_weapon_to_org[view_model];
+
+						int lastSequence = entry.LastSequence;
+						entry.LastSequence = nSequence;
+						if (lastSequence != nSequence || entry.LastNewSequence == -1)
+							newSequence = do_sequence_remapping(it->second, nSequence, active_conf->definition_override_index);
+						else
+							newSequence = entry.LastNewSequence;
+
+						entry.LastNewSequence = newSequence;
+						view_model->GetSequence() = newSequence;
 					}
 				}
 			}
 		}
 	}
-
-	auto pHook = Get_ViewModel_Hook(This);
-	pHook->get_original_function<void(__fastcall*)(sdk::C_BaseViewModel*, void*, int)>(219)(This, Edx, 0);
 }
 
-void BeginFixUpViewmodel(sdk::C_BaseViewModel* ent);
-void EndFixUpViewmodel(sdk::C_BaseViewModel* ent);
-
-auto __cdecl hooks::modelindex_proxy_fn(const sdk::CRecvProxyData* proxy_data_const, void* entity, void* output) -> void
-{
-	ensure_dynamic_hooks();
-	EndFixUpViewmodel(static_cast<sdk::C_BaseViewModel*>(entity));
-
-	static auto original_fn = g_modelindex_hook->get_original_function();
-	original_fn(proxy_data_const, entity, output);
-}
-
-void hook_viewmodel(sdk::C_BaseViewModel* thisptr);
-
-auto __cdecl hooks::weapon_proxy_fn(const sdk::CRecvProxyData* proxy_data_const, void* entity, void* output) -> void
-{
-	const auto view_model = static_cast<sdk::C_BaseViewModel*>(entity);
-
-	ensure_dynamic_hooks();
-	hook_viewmodel(view_model);
-
-	static auto original_fn = g_weapon_hook->get_original_function();
-
-	original_fn(proxy_data_const, entity, output);
-
-	BeginFixUpViewmodel(view_model);
+void UnmapSequence(sdk::C_BaseViewModel* view_model) {
+	auto it = g_weapon_to_org.find(view_model);
+	if(it != g_weapon_to_org.end()) {
+		view_model->GetSequence() = it->second.LastSequence;
+	}
 }

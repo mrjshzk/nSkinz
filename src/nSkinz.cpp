@@ -81,6 +81,9 @@ void On_FRAME_NET_UPDATE_POSTDATAUPDATE_START(sdk::C_BasePlayer* local);
 
 hooks::IBaseClientDLL_FrameStageNotify::Fn* hooks::IBaseClientDLL_FrameStageNotify::m_original;
 
+void MapSequence(sdk::C_BaseViewModel*view_model);
+void UnmapSequence(sdk::C_BaseViewModel* view_model);
+
 auto __fastcall hooks::IBaseClientDLL_FrameStageNotify::hooked(sdk::IBaseClientDLL* thisptr, void*, sdk::ClientFrameStage_t curStage) -> void
 {
 	switch (curStage) {
@@ -95,6 +98,40 @@ auto __fastcall hooks::IBaseClientDLL_FrameStageNotify::hooked(sdk::IBaseClientD
 					if (bent->IsPlayer())
 					{
 						On_FRAME_NET_UPDATE_POSTDATAUPDATE_START(static_cast<sdk::C_BasePlayer*>(bent));
+					}
+				}
+			}
+		}
+		m_original(thisptr, nullptr, curStage);
+	} break;
+	case sdk::FRAME_RENDER_START:
+	{
+		for (int idx = 0; idx <= g_entity_list->GetMaxEntities(); ++idx)
+		{
+			if (auto ent = g_entity_list->GetClientEntity(idx))
+			{
+				if (auto bent = ent->GetBaseEntity())
+				{
+					if (0 == strcmp("predicted_viewmodel", bent->GetClassname()))
+					{
+						MapSequence(static_cast<sdk::C_BaseViewModel*>(bent));
+					}
+				}
+			}
+		}
+		m_original(thisptr, nullptr, curStage);
+	} break;
+	case sdk::FRAME_RENDER_END:
+	{
+		for (int idx = 0; idx <= g_entity_list->GetMaxEntities(); ++idx)
+		{
+			if (auto ent = g_entity_list->GetClientEntity(idx))
+			{
+				if (auto bent = ent->GetBaseEntity())
+				{
+					if (0 == strcmp("predicted_viewmodel", bent->GetClassname()))
+					{
+						UnmapSequence(static_cast<sdk::C_BaseViewModel*>(bent));
 					}
 				}
 			}
@@ -134,11 +171,14 @@ auto initialize(void* instance) -> void
 	//g_game_event_manager_hook = new vmt_smart_hook(g_game_event_manager);
 	//g_game_event_manager_hook->apply_hook<hooks::FireEventClientSide>(9);
 
-	const auto modelindex_prop = sdk::C_BaseViewModel::GetModelIndexProp();
-	g_modelindex_hook = new recv_prop_hook(modelindex_prop, &hooks::modelindex_proxy_fn);
+	//const auto modelindex_prop = sdk::C_BaseViewModel::GetModelIndexProp();
+	//g_modelindex_hook = new recv_prop_hook(modelindex_prop, &hooks::modelindex_proxy_fn);
 
-	const auto weapon_prop = sdk::C_BaseViewModel::GetWeaponProp();
-	g_weapon_hook = new recv_prop_hook(weapon_prop, &hooks::weapon_proxy_fn);
+	//const auto weapon_prop = sdk::C_BaseViewModel::GetWeaponProp();
+	//g_weapon_hook = new recv_prop_hook(weapon_prop, &hooks::weapon_proxy_fn);
+
+	//const auto squence_prop = sdk::C_BaseViewModel::GetSequenceProp();
+	//g_sequence_hook = new recv_prop_hook(squence_prop, &hooks::sequence_proxy_fn);
 
 	const auto team_arr_prop = sdk::C_CS_PlayerResource::GetTeamProp();
 	const auto team_prop = team_arr_prop->m_pDataTable->m_pProps;

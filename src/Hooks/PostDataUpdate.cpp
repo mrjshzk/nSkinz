@@ -82,42 +82,6 @@ void hook_weapon_update_on_remove(sdk::C_BaseAttributableItem* thisptr) {
 	}
 }
 
-struct OrgModelData_s {
-	int ModelIndex = -1;
-	int Sequence = -1;
-	int LastNewSequence = -1;
-};
-
-std::map<sdk::C_BaseEntity*, OrgModelData_s> g_weapon_to_org;
-sdk::C_BaseEntity* g_lastviewmodel = nullptr;
-static std::map<void*, vmt_multi_hook*> C_BaseEntity_UpdateOnRemove_hooks;
-
-vmt_multi_hook* Get_ViewModel_Hook(sdk::C_BaseViewModel* This) {
-	return C_BaseEntity_UpdateOnRemove_hooks[*(void**)This];
-}
-
-void __fastcall C_BaseEntity_UpdateOnRemove_Hook(sdk::C_BaseViewModel* This, void* Edx)
-{
-	if (g_lastviewmodel == This) g_lastviewmodel = nullptr;
-	g_weapon_to_org.erase(This);
-	auto pHook = Get_ViewModel_Hook(This);
-	auto org_fn = pHook->get_original_function<void(__fastcall*)(sdk::C_BaseEntity*, void*)>(127);
-	org_fn(This, Edx);
-}
-
-void hook_viewmodel(sdk::C_BaseViewModel* thisptr) {
-
-	if (C_BaseEntity_UpdateOnRemove_hooks.contains(*(void**)thisptr)) return;
-
-	vmt_multi_hook* pHook = new vmt_multi_hook();
-	if (pHook->initialize_and_hook_instance(thisptr)) {
-		pHook->hook_function(C_BaseEntity_UpdateOnRemove_Hook, 127);
-		pHook->hook_function(&hooks::C_BaseViewModel_SetSequence::hooked, 219);
-		C_BaseEntity_UpdateOnRemove_hooks[*(void**)thisptr] = pHook;
-	}
-}
-
-
 void apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item, item_setting* config, int xuid_lo, int xuid_hi, bool isGlove)
 {
 	uint64_t xuid = (uint64_t)((uint32_t)xuid_lo) << 32 | (uint64_t)(uint32_t)xuid_hi;
@@ -242,59 +206,19 @@ bool GetPlayerIndexToViewModelHash(int index, fnv::hash & hash) {
 	return true;
 }
 
-int do_sequence_remapping(int org_definition_index, int nSequence, int definition_override_index);
+void patch_weapon(sdk::C_BaseAttributableItem* weapon) {
 
-void fixup_view_model(sdk::C_BaseViewModel* view_model) {
-	const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(view_model->GetWeapon());
+	auto& definition_index = weapon->GetItemDefinitionIndex();
 
-	if (view_model_weapon) {
-		auto item = (sdk::C_BaseAttributableItem*)view_model_weapon;
-
-		auto& definition_index = view_model_weapon->GetItemDefinitionIndex();
-		// All knives are terrorist knives.
-		const auto active_conf = g_config.get_from_xuid_by_definition_index(item->GetOriginalOwnerXuidLow(), item->GetOriginalOwnerXuidHigh(), is_knife(definition_index) ? WEAPON_KNIFE : definition_index);
-		if (active_conf && active_conf->definition_override_index) {
-			hook_weapon_update_on_remove(view_model_weapon);
-			auto emplace_result = g_weapon_to_orgindex.emplace(view_model_weapon, definition_index);
-			view_model_weapon->GetItemDefinitionIndex() = active_conf->definition_override_index;
-			const auto override_info = game_data::get_weapon_info(active_conf->definition_override_index);
-			if (override_info) {
-
-				auto& org = g_weapon_to_org[view_model];
-
-				int oldModelIndex = view_model->GetModelIndex();
-				int oldSequence = view_model->GetSequence();
-
-				bool bMapSequence = org.LastNewSequence == -1 || oldModelIndex != org.ModelIndex || oldSequence != org.Sequence;
-
-				org.ModelIndex = oldModelIndex;
-				org.Sequence = oldSequence;
-
-				int newIndex = g_model_info->GetModelIndex(override_info->viewModel);
-				view_model->GetModelIndex() = newIndex;
-
-				if (bMapSequence) {
-					int orgIndex = definition_index;
-					auto it = g_weapon_to_orgindex.find(view_model_weapon);
-					if (it != g_weapon_to_orgindex.end())
-						orgIndex = it->second;
-					int newSequence = do_sequence_remapping(definition_index, oldSequence, active_conf->definition_override_index);
-
-					view_model->GetSequence() = newSequence;
-					org.LastNewSequence = newSequence;
-					//view_model->SetSequence(newSequence);
-				}
-				else {
-					view_model->GetSequence() = org.LastNewSequence;
-				}
-
-				hook_viewmodel(view_model);
-				g_lastviewmodel = view_model;
-			}
-		}
-	}
-	view_model->ValidateModelIndex();
+	// All knives are terrorist knives.
+	if (const auto active_conf = g_config.get_from_xuid_by_definition_index(weapon->GetOriginalOwnerXuidLow(), weapon->GetOriginalOwnerXuidHigh(), is_knife(definition_index) ? WEAPON_KNIFE : definition_index))
+		apply_config_on_attributable_item(weapon, active_conf, weapon->GetOriginalOwnerXuidLow(), weapon->GetOriginalOwnerXuidHigh(), false);
+	else
+		erase_override_if_exists_by_index(weapon->GetOriginalOwnerXuidLow(), weapon->GetOriginalOwnerXuidHigh(), definition_index);
 }
+
+
+void hook_viewmodel(sdk::C_BaseViewModel* thisptr);
 
 void On_FRAME_NET_UPDATE_POSTDATAUPDATE_START(sdk::C_BasePlayer* local)
 {
@@ -389,32 +313,34 @@ void On_FRAME_NET_UPDATE_POSTDATAUPDATE_START(sdk::C_BasePlayer* local)
 			if (!weapon)
 				continue;
 
-			auto item = (sdk::C_BaseAttributableItem*)weapon;
-
-			auto& definition_index = weapon->GetItemDefinitionIndex();
-
-			// All knives are terrorist knives.
-			if (const auto active_conf = g_config.get_from_xuid_by_definition_index(item->GetOriginalOwnerXuidLow(), item->GetOriginalOwnerXuidHigh(), is_knife(definition_index) ? WEAPON_KNIFE : definition_index))
-				apply_config_on_attributable_item(weapon, active_conf, item->GetOriginalOwnerXuidLow(), item->GetOriginalOwnerXuidHigh(), false);
-			else
-				erase_override_if_exists_by_index(item->GetOriginalOwnerXuidLow(), item->GetOriginalOwnerXuidHigh(), definition_index);
+			patch_weapon(weapon);
 		}
 	}
 
-	const auto view_model = get_entity_from_handle<sdk::C_BaseViewModel>(local->GetViewModel());
-	if (view_model) {
-		fixup_view_model(view_model);
-	}
-}
+	auto view_model = get_entity_from_handle<sdk::C_BaseViewModel>(local->GetViewModel());
 
-void BeginFixUpViewmodel(sdk::C_BaseViewModel* view_model) {
-	fixup_view_model(view_model);
-}
+	if (nullptr == view_model) return;
 
-void EndFixUpViewmodel(sdk::C_BaseViewModel* view_model) {
-	auto it = g_weapon_to_org.find(view_model);
-	if (it != g_weapon_to_org.end()) {
-		view_model->GetModelIndex() = it->second.ModelIndex;
-		view_model->GetSequence() = it->second.Sequence;
+	hook_viewmodel(view_model);
+
+	const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(view_model->GetWeapon());
+
+	if (view_model_weapon) {
+		patch_weapon(view_model_weapon);
+
+		auto item = (sdk::C_BaseAttributableItem*)view_model_weapon;
+
+		auto& definition_index = view_model_weapon->GetItemDefinitionIndex();
+		// All knives are terrorist knives.
+		const auto active_conf = g_config.get_from_xuid_by_definition_index(item->GetOriginalOwnerXuidLow(), item->GetOriginalOwnerXuidHigh(), is_knife(definition_index) ? WEAPON_KNIFE : definition_index);
+		if (active_conf && active_conf->definition_override_index) {
+			hook_weapon_update_on_remove(view_model_weapon);
+			auto emplace_result = g_weapon_to_orgindex.emplace(view_model_weapon, definition_index);
+			view_model_weapon->GetItemDefinitionIndex() = active_conf->definition_override_index;
+			const auto override_info = game_data::get_weapon_info(active_conf->definition_override_index);
+			if (override_info) {
+				view_model->GetModelIndex() = g_model_info->GetModelIndex(override_info->viewModel);
+			}
+		}
 	}
 }
