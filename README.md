@@ -40,7 +40,7 @@ Although written from scratch, nSkinz was heavily influenced by [chameleon-ng](h
 Currently only Windows is supported, however this may change ~~in the future~~ if you submit a PR because I'm lazy.
 
 * Clone the source with:
-```git clone --recursive https://github.com/namazso/nSkinz.git```
+```git clone --recursive https://github.com/advancedfx/nSkinz.git```
 * Compile using your preferred compiler
 * Inject the resulting library into the game
 * Press <kbd>Insert</kbd> to bring up the menu.
@@ -52,4 +52,4 @@ Currently only Windows is supported, however this may change ~~in the future~~ i
 
 **This project is licensed under the MIT license**
 
-See the "[LICENSE](https://github.com/namazso/nSkinz/blob/master/LICENSE)" file for more details.
+See the "[LICENSE](https://github.com/advancedfx/nSkinz/blob/advancedfx/LICENSE)" file for more details.
