@@ -83,6 +83,8 @@ hooks::IBaseClientDLL_FrameStageNotify::Fn* hooks::IBaseClientDLL_FrameStageNoti
 
 void MapSequence(sdk::C_BaseViewModel*view_model);
 void UnmapSequence(sdk::C_BaseViewModel* view_model);
+void patch_weapon(sdk::C_BaseAttributableItem* weapon);
+void patch_view_model(sdk::C_BaseViewModel* view_model);
 
 auto __fastcall hooks::IBaseClientDLL_FrameStageNotify::hooked(sdk::IBaseClientDLL* thisptr, void*, sdk::ClientFrameStage_t curStage) -> void
 {
@@ -108,9 +110,17 @@ auto __fastcall hooks::IBaseClientDLL_FrameStageNotify::hooked(sdk::IBaseClientD
 			{
 				if (auto bent = ent->GetBaseEntity())
 				{
-					if (0 == strcmp("predicted_viewmodel", bent->GetClassname()))
+					const char* className = bent->GetClassname();
+
+					if (className == strstr(className, "weapon_")) {
+						auto weapon = static_cast<sdk::C_BaseAttributableItem*>(bent);
+						patch_weapon(weapon);
+					}
+					else if (0 == strcmp("predicted_viewmodel", className))
 					{
-						MapSequence(static_cast<sdk::C_BaseViewModel*>(bent));
+						auto view_model = static_cast<sdk::C_BaseViewModel*>(bent);
+						patch_view_model(view_model);
+						MapSequence(view_model);
 					}
 				}
 			}

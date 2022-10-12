@@ -31,8 +31,7 @@ Although written from scratch, nSkinz was heavily influenced by [chameleon-ng](h
 
 ## Requirements for compiling
 
-* C++17 compilant compiler
-* Tested under: clang 5.0, MSVC 2017
+* Tested under: Microsoft Visual Studio Community 2022
 * [DirectX SDK](https://www.microsoft.com/en-ca/download/details.aspx?id=6812)
 
 ## Usage
