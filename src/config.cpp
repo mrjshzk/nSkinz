@@ -136,8 +136,8 @@ auto config::get_by_definition_index(const int user_id, const int definition_ind
 	int xuid_lo = 0;
 	int xuid_hi = 0;
 
-	xuid_lo = (int)(uint32_t)(xuid >> 32);
-	xuid_hi = (int)(uint32_t)(xuid >> 0);
+	xuid_lo = (int)(uint32_t)(xuid >> 0);
+	xuid_hi = (int)(uint32_t)(xuid >> 32);
 
 	return config::get_from_xuid_by_definition_index(xuid_lo, xuid_hi, definition_index);
 }

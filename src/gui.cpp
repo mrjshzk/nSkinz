@@ -110,13 +110,13 @@ void draw_gui()
 			// User ID
 			char tmp[33];
 			uint64_t xuid;
-			xuid = (uint64_t)((uint32_t)selected_entry.xuid_lo) << 32 | (uint64_t)(uint32_t)selected_entry.xuid_hi;
+			xuid = (uint64_t)(uint32_t)selected_entry.xuid_lo | ((uint64_t)(uint32_t)selected_entry.xuid_hi << 32);
 			strcpy(tmp, std::to_string(xuid).c_str());
 			ImGui::InputText("XUID", tmp, 33);
 			xuid = strtoull(tmp, nullptr, 10);
 			
-			selected_entry.xuid_lo = (int)(uint32_t)(xuid >> 32);
-			selected_entry.xuid_hi = (int)(uint32_t)(xuid >> 0);
+			selected_entry.xuid_lo = (int)(uint32_t)(xuid >> 0);
+			selected_entry.xuid_hi = (int)(uint32_t)(xuid >> 32);
 
 			// Pattern Seed
 			ImGui::InputInt("Seed", &selected_entry.seed);
@@ -263,7 +263,7 @@ void draw_gui()
 		ImGui::PopItemWidth();
 		ImGui::Columns(1);
 
-		ImGui::Text("nSkinz by namazso (advancedfx-v0.1.25)");
+		ImGui::Text("nSkinz by namazso (advancedfx-v0.1.26)");
 
 		ImGui::End();
 	}

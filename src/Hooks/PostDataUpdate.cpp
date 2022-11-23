@@ -32,7 +32,7 @@
 
 void erase_override_if_exists_by_index(int xuid_lo, int xuid_hi, const int definition_index)
 {
-	uint64_t xuid = (uint64_t)((uint32_t)xuid_lo) << 32 | (uint64_t)(uint32_t)xuid_hi;
+	uint64_t xuid = (uint64_t)(uint32_t)xuid_lo | (uint64_t)(uint32_t)xuid_hi << 32;
 
 	// We have info about the item not needed to be overridden
 	if(const auto original_item = game_data::get_weapon_info(definition_index))
@@ -84,7 +84,7 @@ void hook_weapon_update_on_remove(sdk::C_BaseAttributableItem* thisptr) {
 
 void apply_config_on_attributable_item(sdk::C_BaseAttributableItem* item, item_setting* config, int xuid_lo, int xuid_hi, bool isGlove)
 {
-	uint64_t xuid = (uint64_t)((uint32_t)xuid_lo) << 32 | (uint64_t)(uint32_t)xuid_hi;
+	uint64_t xuid = (uint64_t)(uint32_t)xuid_lo | (uint64_t)(uint32_t)xuid_hi << 32;
 
 	item->GetInitialized() = true;
 
@@ -295,7 +295,7 @@ void On_FRAME_NET_UPDATE_POSTDATAUPDATE_START(sdk::C_BasePlayer* local)
 				local->GetBody() = 1;
 			}
 
-			apply_config_on_attributable_item(glove, glove_config, player_info.xuid, player_info.xuid_low, true);
+			apply_config_on_attributable_item(glove, glove_config, player_info.xuid_low, player_info.xuid_high, true);
 		}
 	}
 
