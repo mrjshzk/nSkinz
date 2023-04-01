@@ -41,11 +41,11 @@ namespace hooks
 		static Fn* m_original;
 	};
 
-	struct C_BaseViewModel_SetSequence {
-		using Fn = void __fastcall(sdk::C_BaseViewModel* thisptr, void*, int nSequence);
-		static Fn hooked;
-		static Fn* m_original;
-	};
+	//struct C_BaseViewModel_SetSequence {
+	//	using Fn = void __fastcall(sdk::C_BaseViewModel* thisptr, void*, int nSequence);
+	//	static Fn hooked;
+	//	static Fn* m_original;
+	//};
 
 	struct C_BaseAttributableItem_UpdateOnRemove
 	{
@@ -58,5 +58,5 @@ namespace hooks
 
 	//extern auto __cdecl modelindex_proxy_fn(const sdk::CRecvProxyData* proxy_data_const, void* entity, void* output) -> void;
 	//extern auto __cdecl weapon_proxy_fn(const sdk::CRecvProxyData* proxy_data_const, void* entity, void* output) -> void;
-	//extern auto __cdecl sequence_proxy_fn(const sdk::CRecvProxyData* proxy_data_const, void* entity, void* output) -> void;
+	extern void __cdecl sequence_proxy_fn(const sdk::CRecvProxyData* proxy_data_const, void* entity, void* output);
 }
