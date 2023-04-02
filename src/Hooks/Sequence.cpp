@@ -597,6 +597,7 @@ void MapViewModel(sdk::C_BaseViewModel* view_model) {
 						const auto override_info = game_data::get_weapon_info(active_conf->definition_override_index);
 						if (override_info) {
 							view_model->GetModelIndex() = g_model_info->GetModelIndex(override_info->viewModel);
+							view_model->ValidateModelIndex();
 						}
 						
 						if (lastSequence != nSequence || entry.LastNewSequence == -1 || modelIndex != lastModelIndex)
@@ -618,5 +619,6 @@ void UnmapViewModel(sdk::C_BaseViewModel* view_model) {
 	if(it != g_weapon_to_org.end()) {
 		view_model->GetSequence() = it->second.LastSequence;
 		view_model->GetModelIndex() = it->second.LastModelIndex;
+		view_model->ValidateModelIndex();
 	}
 }
