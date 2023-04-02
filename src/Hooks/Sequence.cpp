@@ -566,8 +566,9 @@ void hook_viewmodel(sdk::C_BaseViewModel* thisptr)
 	}
 }
 
+void patch_weapon(sdk::C_BaseAttributableItem* weapon);
 
-void MapSequence(sdk::C_BaseViewModel* view_model) {
+void MapViewModel(sdk::C_BaseViewModel* view_model) {
 	hook_viewmodel(view_model);
 
 	int nSequence = view_model->GetSequence();
@@ -575,12 +576,13 @@ void MapSequence(sdk::C_BaseViewModel* view_model) {
 	auto& entry = g_weapon_to_org[view_model];
 	int lastSequence = entry.LastSequence;
 	entry.LastSequence = nSequence;
-	int newModelIndex = view_model->GetModelIndex();
+	int modelIndex = view_model->GetModelIndex();
 	int lastModelIndex = entry.LastModelIndex;
-	entry.LastModelIndex = newModelIndex;
+	entry.LastModelIndex = modelIndex;
 
 	const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(view_model->GetWeapon());
 	if (view_model_weapon) {
+		patch_weapon(view_model_weapon);
 		const auto weapon_info = game_data::get_weapon_info(view_model_weapon->GetItemDefinitionIndex());
 		if (weapon_info) {
 			const auto definition_index = view_model_weapon->GetItemDefinitionIndex();
@@ -590,8 +592,14 @@ void MapSequence(sdk::C_BaseViewModel* view_model) {
 				if (nullptr != active_conf && 0 != active_conf->definition_override_index) {
 					auto it = g_weapon_to_orgindex.find(view_model_weapon);
 					if (it != g_weapon_to_orgindex.end()) {
+						hook_weapon_update_on_remove(view_model_weapon);
+						auto emplace_result = g_weapon_to_orgindex.emplace(view_model_weapon, definition_index);
+						const auto override_info = game_data::get_weapon_info(active_conf->definition_override_index);
+						if (override_info) {
+							view_model->GetModelIndex() = g_model_info->GetModelIndex(override_info->viewModel);
+						}
 						
-						if (lastSequence != nSequence || entry.LastNewSequence == -1 || newModelIndex != lastModelIndex)
+						if (lastSequence != nSequence || entry.LastNewSequence == -1 || modelIndex != lastModelIndex)
 							newSequence = do_sequence_remapping(it->second, nSequence, active_conf->definition_override_index);
 						else
 							newSequence = entry.LastNewSequence;
@@ -605,9 +613,10 @@ void MapSequence(sdk::C_BaseViewModel* view_model) {
 	view_model->GetSequence() = newSequence;
 }
 
-void UnmapSequence(sdk::C_BaseViewModel* view_model) {
+void UnmapViewModel(sdk::C_BaseViewModel* view_model) {
 	auto it = g_weapon_to_org.find(view_model);
 	if(it != g_weapon_to_org.end()) {
 		view_model->GetSequence() = it->second.LastSequence;
+		view_model->GetModelIndex() = it->second.LastModelIndex;
 	}
 }

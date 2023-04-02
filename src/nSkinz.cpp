@@ -43,8 +43,8 @@ sdk::C_CS_PlayerResource** g_player_resource;
 //vmt_smart_hook*				g_client_hook;
 //vmt_smart_hook*				g_game_event_manager_hook;
 
-//recv_prop_hook* g_modelindex_hook;
-//recv_prop_hook* g_weapon_hook;
+recv_prop_hook* g_modelindex_hook;
+recv_prop_hook* g_weapon_hook;
 recv_prop_hook* g_sequence_hook;
 
 auto ensure_dynamic_hooks() -> void
@@ -81,10 +81,9 @@ void On_FRAME_NET_UPDATE_POSTDATAUPDATE_START(sdk::C_BasePlayer* local);
 
 hooks::IBaseClientDLL_FrameStageNotify::Fn* hooks::IBaseClientDLL_FrameStageNotify::m_original;
 
-void MapSequence(sdk::C_BaseViewModel*view_model);
-void UnmapSequence(sdk::C_BaseViewModel* view_model);
+void MapViewModel(sdk::C_BaseViewModel* view_model);
+void UnmapViewModel(sdk::C_BaseViewModel* view_model);
 void patch_weapon(sdk::C_BaseAttributableItem* weapon);
-void patch_view_model(sdk::C_BaseViewModel* view_model);
 
 auto __fastcall hooks::IBaseClientDLL_FrameStageNotify::hooked(sdk::IBaseClientDLL* thisptr, void*, sdk::ClientFrameStage_t curStage) -> void
 {
@@ -119,21 +118,48 @@ auto __fastcall hooks::IBaseClientDLL_FrameStageNotify::hooked(sdk::IBaseClientD
 				}
 			}
 		}
+	} break;
+	case sdk::FRAME_NET_UPDATE_END:
+	{
+		for (int idx = 0; idx <= g_entity_list->GetMaxEntities(); ++idx)
+		{
+			if (auto ent = g_entity_list->GetClientEntity(idx))
+			{
+				if (auto bent = ent->GetBaseEntity())
+				{
+					const char* className = bent->GetClassname();
+
+					if (0 == strcmp("predicted_viewmodel", className))
+					{
+						auto view_model = static_cast<sdk::C_BaseViewModel*>(bent);
+						MapViewModel(view_model);
+					}
+				}
+			}
+		}
+		m_original(thisptr, nullptr, curStage);
+	} break;
+	case sdk::FRAME_NET_UPDATE_START:
+	{
+		for (int idx = 0; idx <= g_entity_list->GetMaxEntities(); ++idx)
+		{
+			if (auto ent = g_entity_list->GetClientEntity(idx))
+			{
+				if (auto bent = ent->GetBaseEntity())
+				{
+					if (0 == strcmp("predicted_viewmodel", bent->GetClassname()))
+					{
+						UnmapViewModel(static_cast<sdk::C_BaseViewModel*>(bent));
+					}
+				}
+			}
+		}
 		m_original(thisptr, nullptr, curStage);
 	} break;
 	default:
 		m_original(thisptr, nullptr, curStage);
 	}
 
-}
-
-
-void __cdecl hooks::sequence_proxy_fn(const sdk::CRecvProxyData* proxy_data_const, void* entity, void* output) {
-	auto view_model = static_cast<sdk::C_BaseViewModel*>(entity);
-	patch_view_model(view_model);
-	UnmapSequence(view_model);
-	g_sequence_hook->get_original_function()(proxy_data_const, entity, output);
-	MapSequence(view_model);
 }
 
 auto initialize(void* instance) -> void
@@ -169,8 +195,8 @@ auto initialize(void* instance) -> void
 	//const auto weapon_prop = sdk::C_BaseViewModel::GetWeaponProp();
 	//g_weapon_hook = new recv_prop_hook(weapon_prop, &hooks::weapon_proxy_fn);
 
-	const auto squence_prop = sdk::C_BaseViewModel::GetSequenceProp();
-	g_sequence_hook = new recv_prop_hook(squence_prop, &hooks::sequence_proxy_fn);
+	//const auto squence_prop = sdk::C_BaseViewModel::GetSequenceProp();
+	//g_sequence_hook = new recv_prop_hook(squence_prop, &hooks::sequence_proxy_fn);
 
 	const auto team_arr_prop = sdk::C_CS_PlayerResource::GetTeamProp();
 	const auto team_prop = team_arr_prop->m_pDataTable->m_pProps;

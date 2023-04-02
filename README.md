@@ -31,16 +31,16 @@ Although written from scratch, nSkinz was heavily influenced by [chameleon-ng](h
 
 ## Requirements for compiling
 
-* Tested under: [Microsoft Visual Studio Community 2022](https://visualstudio.microsoft.com/vs/community/)
-* Latest [Git](https://git-scm.com/downloads)
+* Tested under: Microsoft Visual Studio Community 2022
+* [DirectX SDK](https://www.microsoft.com/en-ca/download/details.aspx?id=6812)
 
 ## Usage
 
 Currently only Windows is supported, however this may change ~~in the future~~ if you submit a PR because I'm lazy.
 
 * Clone the source with:
-```git clone --recurse-submodules https://github.com/advancedfx/nSkinz.git```
-* Compile into a x86 library using your preferred compiler
+```git clone --recursive https://github.com/advancedfx/nSkinz.git```
+* Compile using your preferred compiler
 * Inject the resulting library into the game
 * Press <kbd>Insert</kbd> to bring up the menu.
 * Setup weapon configuration(s)

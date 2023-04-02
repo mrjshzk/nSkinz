@@ -92,7 +92,7 @@ namespace sdk
 		NETVAR(GetOwner, "CBaseViewModel", "m_hOwner", CBaseHandle);
 		//NETPROP(GetModelIndexProp, "CBaseViewModel", "m_nModelIndex");
 		//NETPROP(GetWeaponProp, "CBaseViewModel", "m_hWeapon");
-		NETPROP(GetSequenceProp, "CBaseViewModel", "m_nSequence");
+		//NETPROP(GetSequenceProp, "CBaseViewModel", "m_nSequence");
 
 		//void SetSequence(int nSequence)
 		//{

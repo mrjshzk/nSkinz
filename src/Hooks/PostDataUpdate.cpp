@@ -345,30 +345,3 @@ void On_FRAME_NET_UPDATE_POSTDATAUPDATE_START(sdk::C_BasePlayer* local)
 		}
 	}*/
 }
-
-void patch_view_model(sdk::C_BaseViewModel * view_model) {
-	if (nullptr == view_model) return;
-
-	hook_viewmodel(view_model);
-
-	const auto view_model_weapon = get_entity_from_handle<sdk::C_BaseAttributableItem>(view_model->GetWeapon());
-
-	if (view_model_weapon) {
-		patch_weapon(view_model_weapon);
-
-		auto item = (sdk::C_BaseAttributableItem*)view_model_weapon;
-
-		auto& definition_index = view_model_weapon->GetItemDefinitionIndex();
-		// All knives are terrorist knives.
-		const auto active_conf = g_config.get_from_xuid_by_definition_index(item->GetOriginalOwnerXuidLow(), item->GetOriginalOwnerXuidHigh(), is_knife(definition_index) ? WEAPON_KNIFE : definition_index);
-		if (active_conf && active_conf->definition_override_index) {
-			hook_weapon_update_on_remove(view_model_weapon);
-			auto emplace_result = g_weapon_to_orgindex.emplace(view_model_weapon, definition_index);
-			view_model_weapon->GetItemDefinitionIndex() = active_conf->definition_override_index;
-			const auto override_info = game_data::get_weapon_info(active_conf->definition_override_index);
-			if (override_info) {
-				view_model->GetModelIndex() = g_model_info->GetModelIndex(override_info->viewModel);
-			}
-		}
-	}
-}
