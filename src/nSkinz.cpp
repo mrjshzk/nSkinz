@@ -115,9 +115,15 @@ auto __fastcall hooks::IBaseClientDLL_FrameStageNotify::hooked(sdk::IBaseClientD
 						auto weapon = static_cast<sdk::C_BaseAttributableItem*>(bent);
 						patch_weapon(weapon);
 					}
+					else if (0 == strcmp("predicted_viewmodel", className))
+					{
+						auto view_model = static_cast<sdk::C_BaseViewModel*>(bent);
+						MapViewModel(view_model);
+					}
 				}
 			}
 		}
+		m_original(thisptr, nullptr, curStage);
 	} break;
 	case sdk::FRAME_NET_UPDATE_END:
 	{
@@ -141,6 +147,7 @@ auto __fastcall hooks::IBaseClientDLL_FrameStageNotify::hooked(sdk::IBaseClientD
 	} break;
 	case sdk::FRAME_NET_UPDATE_START:
 	{
+		m_original(thisptr, nullptr, curStage);
 		for (int idx = 0; idx <= g_entity_list->GetMaxEntities(); ++idx)
 		{
 			if (auto ent = g_entity_list->GetClientEntity(idx))
@@ -154,7 +161,6 @@ auto __fastcall hooks::IBaseClientDLL_FrameStageNotify::hooked(sdk::IBaseClientD
 				}
 			}
 		}
-		m_original(thisptr, nullptr, curStage);
 	} break;
 	default:
 		m_original(thisptr, nullptr, curStage);

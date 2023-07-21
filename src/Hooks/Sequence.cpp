@@ -537,6 +537,7 @@ struct OrgModelData_s {
 	int LastModelIndex = -1;
 	int LastSequence = -1;
 	int LastNewSequence = -1;
+	bool IsMapped = false;
 };
 
 std::map<sdk::C_BaseEntity*, OrgModelData_s> g_weapon_to_org;
@@ -574,6 +575,10 @@ void MapViewModel(sdk::C_BaseViewModel* view_model) {
 	int nSequence = view_model->GetSequence();
 	int newSequence = nSequence;
 	auto& entry = g_weapon_to_org[view_model];
+
+	if (entry.IsMapped) return;
+
+	entry.IsMapped = true;
 	int lastSequence = entry.LastSequence;
 	entry.LastSequence = nSequence;
 	int modelIndex = view_model->GetModelIndex();
@@ -597,7 +602,6 @@ void MapViewModel(sdk::C_BaseViewModel* view_model) {
 						const auto override_info = game_data::get_weapon_info(active_conf->definition_override_index);
 						if (override_info) {
 							view_model->GetModelIndex() = g_model_info->GetModelIndex(override_info->viewModel);
-							view_model->ValidateModelIndex();
 						}
 						
 						if (lastSequence != nSequence || entry.LastNewSequence == -1 || modelIndex != lastModelIndex)
@@ -616,9 +620,9 @@ void MapViewModel(sdk::C_BaseViewModel* view_model) {
 
 void UnmapViewModel(sdk::C_BaseViewModel* view_model) {
 	auto it = g_weapon_to_org.find(view_model);
-	if(it != g_weapon_to_org.end()) {
+	if(it != g_weapon_to_org.end() && it->second.IsMapped) {
 		view_model->GetSequence() = it->second.LastSequence;
 		view_model->GetModelIndex() = it->second.LastModelIndex;
-		view_model->ValidateModelIndex();
+		it->second.IsMapped = false;
 	}
 }
